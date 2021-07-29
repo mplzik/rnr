@@ -1,0 +1,13 @@
+{
+	"name": "test",
+	"children": [
+		{
+			"name": "Command 1",
+			"command": ["echo", "Hello, world"]
+		},
+		{
+			"name": "Touch",
+			"command": ["touch", "test.txt"]
+		}
+	]
+}

@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package rnr;
+option go_package = "./pb";
+
+enum TaskState {
+    UNKNOWN = 0;
+    PENDING = 1;
+    RUNNING = 2;
+    SUCCESS = 3;
+    FAILED = 4;
+    SKIPPED = 5;
+}
+
+message Job {
+    int64 version = 1;
+    string uuid = 2;
+    Task root = 3;
+
+}
+
+message Task {
+    string name = 2;
+    TaskState state = 3;
+    string message = 4;
+    repeated Task children = 5;
+}
+
+message TaskRequest {
+    repeated string path = 1;
+    TaskState state = 2;
+}
