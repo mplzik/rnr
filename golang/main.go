@@ -5,7 +5,6 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
-	"time"
 
 	rnr "github.com/mplzik/rnr/golang/pkg/rnr"
 )
@@ -26,13 +25,8 @@ func main() {
 		}))
 	}
 
+	job.Activate()
 	job.Start()
-
-	go func() {
-		for range time.Tick(time.Second) {
-			job.Poll()
-		}
-	}()
 
 	// Listen and serve
 
