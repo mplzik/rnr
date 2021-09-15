@@ -1,23 +1,18 @@
 package rnr
 
 import (
-	"embed"
 	"fmt"
-	"io/fs"
 	"log"
 	"net/http"
 
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/mplzik/rnr/golang/pkg/pb"
+	"github.com/mplzik/rnr/ui"
 )
 
 type RnrWebServer struct {
 	job *Job
 }
-
-// The web UI used to display the data
-//go:embed ui
-var content embed.FS
 
 func NewRnrWebserver(job *Job) *RnrWebServer {
 	ret := &RnrWebServer{
@@ -57,13 +52,7 @@ func (rnr *RnrWebServer) tasksHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (rnr *RnrWebServer) RegisterHttp(urlPrefix string) {
-
-	fsRoot, err := fs.Sub(content, "ui")
-	if err != nil {
-		log.Fatalf("Vendored data doesn't contain subdir 'ui', something went wrong: %s", err.Error())
-	}
-	fs := http.FileServer(http.FS(fsRoot))
+	fs := http.FileServer(http.FS(ui.Content))
 	http.Handle(urlPrefix+"/", fs)
 	http.HandleFunc(urlPrefix+"/tasks", rnr.tasksHandler)
-
 }

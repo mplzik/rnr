@@ -1,4 +1,4 @@
-module github.com/mplzik/rnr/golang
+module github.com/mplzik/rnr
 
 go 1.16
 
