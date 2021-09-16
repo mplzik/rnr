@@ -51,7 +51,7 @@
                             <span class="task-name"></span>
                             <span class="task-message"></span>
                         </summary>
-                        <select onChange="onStateChange(${JSON.stringify(path)})">
+                        <select onChange='onStateChange(${JSON.stringify(path)})'>
                         ${states.map((x) => `<option>${x}</option>\n`)}
                         </select>                        
                         <ul style="list-style-type: none;" class="task-children">
@@ -71,7 +71,7 @@
                 }
                 var me = $(key);
 
-                data.children.forEach((x,i) => { updateStep(x, path.concat([i]), key + " > .task-children") })
+                data.children.forEach((x,i) => { updateStep(x, path.concat([x.name]), key + " > .task-children") })
 
                 me.find(" > summary span.task-name").text(data.name)
                 me.find(" > summary span.task-message").text(data.message)
