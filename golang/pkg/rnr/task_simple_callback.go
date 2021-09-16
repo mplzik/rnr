@@ -8,14 +8,14 @@ import (
 // CallbackTask
 
 // CallbackTask implements simple task with synchronously called callback.
-type CallbackTask struct {
+type SimpleCallbackTask struct {
 	pb       pb.Task
 	callback func() (bool, error)
 }
 
-// NewCallbackTask returns a new callback task
-func NewCallbackTask(name string, callback func() (bool, error)) *CallbackTask {
-	ret := &CallbackTask{}
+// NewSimpleCallbackTask returns a new callback task
+func NewSimpleCallbackTask(name string, callback func() (bool, error)) *SimpleCallbackTask {
+	ret := &SimpleCallbackTask{}
 
 	ret.pb.Name = name
 	ret.callback = callback
@@ -24,7 +24,7 @@ func NewCallbackTask(name string, callback func() (bool, error)) *CallbackTask {
 }
 
 // Poll synchronously calls the callback
-func (ct *CallbackTask) Poll() {
+func (ct *SimpleCallbackTask) Poll() {
 	if taskSchedState(&ct.pb) != RUNNING {
 		return
 	}
@@ -39,15 +39,15 @@ func (ct *CallbackTask) Poll() {
 	}
 }
 
-func (ct *CallbackTask) GetProto() *pb.Task {
+func (ct *SimpleCallbackTask) GetProto() *pb.Task {
 	ret := proto.Clone(&ct.pb).(*pb.Task)
 	return ret
 }
 
-func (ct *CallbackTask) SetState(state pb.TaskState) {
+func (ct *SimpleCallbackTask) SetState(state pb.TaskState) {
 	ct.pb.State = state
 }
 
-func (ct *CallbackTask) GetChild(name string) TaskInterface {
+func (ct *SimpleCallbackTask) GetChild(name string) TaskInterface {
 	return nil
 }
