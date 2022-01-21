@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"time"
 
-	proto "github.com/golang/protobuf/proto"
 	"github.com/mplzik/rnr/golang/pkg/pb"
+	proto "google.golang.org/protobuf/proto"
 )
 
 type Job struct {
-	job    pb.Job
-	root   TaskInterface
-	active bool
+	job  pb.Job
+	root TaskInterface
+	stop chan struct{}
 }
 
 func NewJob(root TaskInterface) *Job {
@@ -21,9 +21,22 @@ func NewJob(root TaskInterface) *Job {
 			Uuid:    "1235abcdef",
 			Root:    nil,
 		},
-		root:   root,
-		active: false,
+		root: root,
+		stop: make(chan struct{}),
 	}
+
+	go func() {
+		ticker := time.NewTicker(time.Second)
+		for exit := false; !exit; {
+			select {
+			case <-ret.stop:
+				exit = true
+			case <-ticker.C:
+				ret.root.Poll()
+			}
+		}
+	}()
+
 	return ret
 }
 
@@ -42,14 +55,14 @@ func (j *Job) TaskRequest(r *pb.TaskRequest) error {
 	var task = j.root
 
 	if task == nil {
-		return fmt.Errorf("Root task not configured")
+		return fmt.Errorf("root task not configured")
 	}
 
 	for _, i := range r.Path {
 		task = task.GetChild(i)
 
 		if task == nil {
-			return fmt.Errorf("Task %v not found", r.Path)
+			return fmt.Errorf("task %v not found", r.Path)
 		}
 	}
 
@@ -60,18 +73,7 @@ func (j *Job) TaskRequest(r *pb.TaskRequest) error {
 	return nil
 }
 
+// Start is a shortcut for setting the root task to "running" state.
 func (j *Job) Start() {
 	j.root.SetState(pb.TaskState_RUNNING)
-}
-
-func (j *Job) Activate() {
-	if j.active == true {
-		return
-	}
-	j.active = true
-	go func() {
-		for range time.Tick(time.Second) {
-			j.Poll()
-		}
-	}()
 }

@@ -25,9 +25,6 @@ func main() {
 		}))
 	}
 
-	job.Activate()
-	job.Start()
-
 	// Listen and serve
 
 	rnr := rnr.NewRnrWebserver(job)
