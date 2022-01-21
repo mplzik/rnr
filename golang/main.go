@@ -16,11 +16,11 @@ func main() {
 	job := rnr.NewJob(n)
 
 	for i := 0; i < 100; i++ {
-		n.Add(rnr.NewSimpleCallbackTask(fmt.Sprintf("Hello %d", i), func() (bool, error) {
+		n.Add(rnr.NewSimpleCallbackTask(fmt.Sprintf("Hello %d", i), func(_ *rnr.SimpleCallbackTask) (bool, error) {
 			if rand.Intn(3) > 1 {
 				return true, nil
 			} else {
-				return false, fmt.Errorf("bad luck")
+				return true, fmt.Errorf("bad luck")
 			}
 		}))
 	}

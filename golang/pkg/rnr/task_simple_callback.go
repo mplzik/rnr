@@ -8,13 +8,14 @@ import (
 // CallbackTask
 
 // CallbackTask implements simple task with synchronously called callback.
+// It returns a boolean indicating whether to transition into a final state and an error in case an error has happened. These values are used to best-effort-update the task's protobuf. If (false, nil) is supplied, the task state will be left untouched
 type SimpleCallbackTask struct {
 	pb       pb.Task
-	callback func() (bool, error)
+	callback func(*SimpleCallbackTask) (bool, error)
 }
 
-// NewSimpleCallbackTask returns a new callback task
-func NewSimpleCallbackTask(name string, callback func() (bool, error)) *SimpleCallbackTask {
+// NewSimpleCallbackTask returns a new callback task.
+func NewSimpleCallbackTask(name string, callback func(*SimpleCallbackTask) (bool, error)) *SimpleCallbackTask {
 	ret := &SimpleCallbackTask{}
 
 	ret.pb.Name = name
@@ -29,12 +30,12 @@ func (ct *SimpleCallbackTask) Poll() {
 		return
 	}
 
-	ret, err := ct.callback()
+	ret, err := ct.callback(ct)
 
 	if err != nil {
 		ct.pb.State = pb.TaskState_FAILED
 		ct.pb.Message = err.Error()
-	} else if ret == true {
+	} else if ret {
 		ct.pb.State = pb.TaskState_SUCCESS
 	}
 }

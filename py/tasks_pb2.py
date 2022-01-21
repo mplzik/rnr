@@ -4,6 +4,7 @@
 """Generated protocol buffer code."""
 from google.protobuf.internal import enum_type_wrapper
 from google.protobuf import descriptor as _descriptor
+from google.protobuf import descriptor_pool as _descriptor_pool
 from google.protobuf import message as _message
 from google.protobuf import reflection as _reflection
 from google.protobuf import symbol_database as _symbol_database
@@ -14,60 +15,9 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor.FileDescriptor(
-  name='tasks.proto',
-  package='rnr',
-  syntax='proto3',
-  serialized_options=b'Z\004./pb',
-  create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x0btasks.proto\x12\x03rnr\"=\n\x03Job\x12\x0f\n\x07version\x18\x01 \x01(\x03\x12\x0c\n\x04uuid\x18\x02 \x01(\t\x12\x17\n\x04root\x18\x03 \x01(\x0b\x32\t.rnr.Task\"a\n\x04Task\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x1d\n\x05state\x18\x03 \x01(\x0e\x32\x0e.rnr.TaskState\x12\x0f\n\x07message\x18\x04 \x01(\t\x12\x1b\n\x08\x63hildren\x18\x05 \x03(\x0b\x32\t.rnr.Task\":\n\x0bTaskRequest\x12\x0c\n\x04path\x18\x01 \x03(\t\x12\x1d\n\x05state\x18\x02 \x01(\x0e\x32\x0e.rnr.TaskState*X\n\tTaskState\x12\x0b\n\x07UNKNOWN\x10\x00\x12\x0b\n\x07PENDING\x10\x01\x12\x0b\n\x07RUNNING\x10\x02\x12\x0b\n\x07SUCCESS\x10\x03\x12\n\n\x06\x46\x41ILED\x10\x04\x12\x0b\n\x07SKIPPED\x10\x05\x42\x06Z\x04./pbb\x06proto3'
-)
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0btasks.proto\x12\x03rnr\"=\n\x03Job\x12\x0f\n\x07version\x18\x01 \x01(\x03\x12\x0c\n\x04uuid\x18\x02 \x01(\t\x12\x17\n\x04root\x18\x03 \x01(\x0b\x32\t.rnr.Task\"a\n\x04Task\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x1d\n\x05state\x18\x03 \x01(\x0e\x32\x0e.rnr.TaskState\x12\x0f\n\x07message\x18\x04 \x01(\t\x12\x1b\n\x08\x63hildren\x18\x05 \x03(\x0b\x32\t.rnr.Task\":\n\x0bTaskRequest\x12\x0c\n\x04path\x18\x01 \x03(\t\x12\x1d\n\x05state\x18\x02 \x01(\x0e\x32\x0e.rnr.TaskState*X\n\tTaskState\x12\x0b\n\x07UNKNOWN\x10\x00\x12\x0b\n\x07PENDING\x10\x01\x12\x0b\n\x07RUNNING\x10\x02\x12\x0b\n\x07SUCCESS\x10\x03\x12\n\n\x06\x46\x41ILED\x10\x04\x12\x0b\n\x07SKIPPED\x10\x05\x42\x06Z\x04./pbb\x06proto3')
 
-_TASKSTATE = _descriptor.EnumDescriptor(
-  name='TaskState',
-  full_name='rnr.TaskState',
-  filename=None,
-  file=DESCRIPTOR,
-  create_key=_descriptor._internal_create_key,
-  values=[
-    _descriptor.EnumValueDescriptor(
-      name='UNKNOWN', index=0, number=0,
-      serialized_options=None,
-      type=None,
-      create_key=_descriptor._internal_create_key),
-    _descriptor.EnumValueDescriptor(
-      name='PENDING', index=1, number=1,
-      serialized_options=None,
-      type=None,
-      create_key=_descriptor._internal_create_key),
-    _descriptor.EnumValueDescriptor(
-      name='RUNNING', index=2, number=2,
-      serialized_options=None,
-      type=None,
-      create_key=_descriptor._internal_create_key),
-    _descriptor.EnumValueDescriptor(
-      name='SUCCESS', index=3, number=3,
-      serialized_options=None,
-      type=None,
-      create_key=_descriptor._internal_create_key),
-    _descriptor.EnumValueDescriptor(
-      name='FAILED', index=4, number=4,
-      serialized_options=None,
-      type=None,
-      create_key=_descriptor._internal_create_key),
-    _descriptor.EnumValueDescriptor(
-      name='SKIPPED', index=5, number=5,
-      serialized_options=None,
-      type=None,
-      create_key=_descriptor._internal_create_key),
-  ],
-  containing_type=None,
-  serialized_options=None,
-  serialized_start=242,
-  serialized_end=330,
-)
-_sym_db.RegisterEnumDescriptor(_TASKSTATE)
-
+_TASKSTATE = DESCRIPTOR.enum_types_by_name['TaskState']
 TaskState = enum_type_wrapper.EnumTypeWrapper(_TASKSTATE)
 UNKNOWN = 0
 PENDING = 1
@@ -77,154 +27,9 @@ FAILED = 4
 SKIPPED = 5
 
 
-
-_JOB = _descriptor.Descriptor(
-  name='Job',
-  full_name='rnr.Job',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='version', full_name='rnr.Job.version', index=0,
-      number=1, type=3, cpp_type=2, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='uuid', full_name='rnr.Job.uuid', index=1,
-      number=2, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='root', full_name='rnr.Job.root', index=2,
-      number=3, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=20,
-  serialized_end=81,
-)
-
-
-_TASK = _descriptor.Descriptor(
-  name='Task',
-  full_name='rnr.Task',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='name', full_name='rnr.Task.name', index=0,
-      number=2, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='state', full_name='rnr.Task.state', index=1,
-      number=3, type=14, cpp_type=8, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='message', full_name='rnr.Task.message', index=2,
-      number=4, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='children', full_name='rnr.Task.children', index=3,
-      number=5, type=11, cpp_type=10, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=83,
-  serialized_end=180,
-)
-
-
-_TASKREQUEST = _descriptor.Descriptor(
-  name='TaskRequest',
-  full_name='rnr.TaskRequest',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='path', full_name='rnr.TaskRequest.path', index=0,
-      number=1, type=9, cpp_type=9, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='state', full_name='rnr.TaskRequest.state', index=1,
-      number=2, type=14, cpp_type=8, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=182,
-  serialized_end=240,
-)
-
-_JOB.fields_by_name['root'].message_type = _TASK
-_TASK.fields_by_name['state'].enum_type = _TASKSTATE
-_TASK.fields_by_name['children'].message_type = _TASK
-_TASKREQUEST.fields_by_name['state'].enum_type = _TASKSTATE
-DESCRIPTOR.message_types_by_name['Job'] = _JOB
-DESCRIPTOR.message_types_by_name['Task'] = _TASK
-DESCRIPTOR.message_types_by_name['TaskRequest'] = _TASKREQUEST
-DESCRIPTOR.enum_types_by_name['TaskState'] = _TASKSTATE
-_sym_db.RegisterFileDescriptor(DESCRIPTOR)
-
+_JOB = DESCRIPTOR.message_types_by_name['Job']
+_TASK = DESCRIPTOR.message_types_by_name['Task']
+_TASKREQUEST = DESCRIPTOR.message_types_by_name['TaskRequest']
 Job = _reflection.GeneratedProtocolMessageType('Job', (_message.Message,), {
   'DESCRIPTOR' : _JOB,
   '__module__' : 'tasks_pb2'
@@ -246,6 +51,16 @@ TaskRequest = _reflection.GeneratedProtocolMessageType('TaskRequest', (_message.
   })
 _sym_db.RegisterMessage(TaskRequest)
 
+if _descriptor._USE_C_DESCRIPTORS == False:
 
-DESCRIPTOR._options = None
+  DESCRIPTOR._options = None
+  DESCRIPTOR._serialized_options = b'Z\004./pb'
+  _TASKSTATE._serialized_start=242
+  _TASKSTATE._serialized_end=330
+  _JOB._serialized_start=20
+  _JOB._serialized_end=81
+  _TASK._serialized_start=83
+  _TASK._serialized_end=180
+  _TASKREQUEST._serialized_start=182
+  _TASKREQUEST._serialized_end=240
 # @@protoc_insertion_point(module_scope)
