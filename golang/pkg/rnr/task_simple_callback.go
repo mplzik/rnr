@@ -1,6 +1,9 @@
 package rnr
 
 import (
+	"context"
+	"time"
+
 	"github.com/mplzik/rnr/golang/pkg/pb"
 	"google.golang.org/protobuf/proto"
 )
@@ -11,11 +14,11 @@ import (
 // It returns a boolean indicating whether to transition into a final state and an error in case an error has happened. These values are used to best-effort-update the task's protobuf. If (false, nil) is supplied, the task state will be left untouched
 type SimpleCallbackTask struct {
 	pb       pb.Task
-	callback func(*SimpleCallbackTask) (bool, error)
+	callback func(*SimpleCallbackTask, context.Context) (bool, error)
 }
 
 // NewSimpleCallbackTask returns a new callback task.
-func NewSimpleCallbackTask(name string, callback func(*SimpleCallbackTask) (bool, error)) *SimpleCallbackTask {
+func NewSimpleCallbackTask(name string, callback func(*SimpleCallbackTask, context.Context) (bool, error)) *SimpleCallbackTask {
 	ret := &SimpleCallbackTask{}
 
 	ret.pb.Name = name
@@ -30,7 +33,8 @@ func (ct *SimpleCallbackTask) Poll() {
 		return
 	}
 
-	ret, err := ct.callback(ct)
+	ctx, _ := context.WithTimeout(context.Background(), 1*time.Second)
+	ret, err := ct.callback(ct, ctx)
 
 	if err != nil {
 		ct.pb.State = pb.TaskState_FAILED

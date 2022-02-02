@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"math/rand"
@@ -16,7 +17,7 @@ func main() {
 	job := rnr.NewJob(n)
 
 	for i := 0; i < 100; i++ {
-		n.Add(rnr.NewSimpleCallbackTask(fmt.Sprintf("Hello %d", i), func(_ *rnr.SimpleCallbackTask) (bool, error) {
+		n.Add(rnr.NewSimpleCallbackTask(fmt.Sprintf("Hello %d", i), func(_ *rnr.SimpleCallbackTask, ctx context.Context) (bool, error) {
 			if rand.Intn(3) > 1 {
 				return true, nil
 			} else {

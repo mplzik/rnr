@@ -29,8 +29,10 @@ func NewJob(root TaskInterface) *Job {
 		ticker := time.NewTicker(time.Second)
 		for exit := false; !exit; {
 			select {
-			case <-ret.stop:
-				exit = true
+			case _, ok := <-ret.stop:
+				if !ok {
+					exit = true
+				}
 			case <-ticker.C:
 				ret.root.Poll()
 			}
