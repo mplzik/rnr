@@ -2,6 +2,7 @@ package rnr
 
 import (
 	"os/exec"
+	"sync"
 
 	proto "github.com/golang/protobuf/proto"
 	"github.com/mplzik/rnr/golang/pkg/pb"
@@ -10,6 +11,7 @@ import (
 // Shell Task
 
 type ShellTask struct {
+	pbMutex  sync.Mutex
 	pb       pb.Task
 	children []TaskInterface
 	cmdName  string
@@ -56,14 +58,20 @@ func (ct *ShellTask) Poll() {
 	// TODO: if deemed safe, terminating the process while
 }
 
-func (ct *ShellTask) GetProto() *pb.Task {
+func (ct *ShellTask) Proto(updater func(*pb.Task)) *pb.Task {
+	ct.pbMutex.Lock()
+	defer ct.pbMutex.Unlock()
+
+	if updater != nil {
+		updater(&ct.pb)
+	}
 	ret := proto.Clone(&ct.pb).(*pb.Task)
 
 	return ret
 }
 
 func (nt *ShellTask) SetState(state pb.TaskState) {
-	nt.pb.State = state
+	nt.Proto(func(pb *pb.Task) { pb.State = state })
 }
 
 func (nt *ShellTask) GetChild(name string) TaskInterface {

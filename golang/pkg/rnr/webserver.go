@@ -30,7 +30,7 @@ func (rnr *RnrWebServer) tasksHandler(w http.ResponseWriter, r *http.Request) {
 			EmitDefaults: true,
 		}
 		w.Header().Set("Content-Type", "application/json")
-		err := m.Marshal(w, rnr.job.GetProto())
+		err := m.Marshal(w, rnr.job.Proto(nil))
 		if err != nil {
 			log.Fatal("Failed to convert a task to json:", err.Error())
 		}

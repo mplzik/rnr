@@ -2,6 +2,7 @@ package rnr
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"github.com/mplzik/rnr/golang/pkg/pb"
@@ -13,6 +14,7 @@ import (
 // CallbackTask implements simple task with synchronously called callback.
 // It returns a boolean indicating whether to transition into a final state and an error in case an error has happened. These values are used to best-effort-update the task's protobuf. If (false, nil) is supplied, the task state will be left untouched
 type SimpleCallbackTask struct {
+	pbMutex  sync.Mutex
 	pb       pb.Task
 	callback func(*SimpleCallbackTask, context.Context) (bool, error)
 }
@@ -44,13 +46,20 @@ func (ct *SimpleCallbackTask) Poll() {
 	}
 }
 
-func (ct *SimpleCallbackTask) GetProto() *pb.Task {
+func (ct *SimpleCallbackTask) Proto(updater func(*pb.Task)) *pb.Task {
+	ct.pbMutex.Lock()
+	defer ct.pbMutex.Unlock()
+
+	if updater != nil {
+		updater(&ct.pb)
+	}
 	ret := proto.Clone(&ct.pb).(*pb.Task)
+
 	return ret
 }
 
 func (ct *SimpleCallbackTask) SetState(state pb.TaskState) {
-	ct.pb.State = state
+	ct.Proto(func(pb *pb.Task) { pb.State = state })
 }
 
 func (ct *SimpleCallbackTask) GetChild(name string) TaskInterface {

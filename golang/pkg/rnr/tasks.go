@@ -25,7 +25,7 @@ func taskSchedState(pbt *pb.Task) int {
 // TaskInterface is a generic interface for pollable tasks
 type TaskInterface interface {
 	Poll()
-	GetProto() *pb.Task
+	Proto(updater func(*pb.Task)) *pb.Task
 	SetState(pb.TaskState)
 	GetChild(name string) TaskInterface
 }

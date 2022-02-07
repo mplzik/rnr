@@ -2,6 +2,7 @@ package rnr
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/mplzik/rnr/golang/pkg/pb"
 	"google.golang.org/protobuf/proto"
@@ -10,6 +11,7 @@ import (
 // Nested Task
 
 type NestedTask struct {
+	pbMutex     sync.Mutex
 	pb          pb.Task
 	children    []TaskInterface
 	parallelism int
@@ -24,11 +26,11 @@ func NewNestedTask(name string, parallelism int) *NestedTask {
 }
 
 func (nt *NestedTask) Add(task TaskInterface) error {
-	newName := task.GetProto().GetName()
+	newName := task.Proto(nil).GetName()
 
 	for _, child := range nt.children {
-		if child.GetProto().Name == newName {
-			return fmt.Errorf("task named '%s' already exists", child.GetProto().Name)
+		if child.Proto(nil).Name == newName {
+			return fmt.Errorf("task named '%s' already exists", child.Proto(nil).Name)
 		}
 	}
 	nt.children = append(nt.children, task)
@@ -38,7 +40,8 @@ func (nt *NestedTask) Add(task TaskInterface) error {
 }
 
 func (nt *NestedTask) Poll() {
-	if taskSchedState(&nt.pb) != RUNNING {
+
+	if taskSchedState(nt.Proto(nil)) != RUNNING {
 		return
 	}
 
@@ -48,10 +51,10 @@ func (nt *NestedTask) Poll() {
 	// Poll running tasks
 	for i := range nt.children {
 		child := nt.children[i]
-		state := taskSchedState(child.GetProto())
+		state := taskSchedState(child.Proto(nil))
 		if state == RUNNING {
 			child.Poll()
-			if taskSchedState(child.GetProto()) == RUNNING {
+			if taskSchedState(child.Proto(nil)) == RUNNING {
 				running++
 			}
 		}
@@ -73,46 +76,53 @@ func (nt *NestedTask) Poll() {
 	failedCount := 0
 	doneCount := 0
 	for _, child := range nt.children {
-		if child.GetProto().State == pb.TaskState_SUCCESS {
+		if child.Proto(nil).State == pb.TaskState_SUCCESS {
 			successCount++
-		} else if child.GetProto().State == pb.TaskState_FAILED {
+		} else if child.Proto(nil).State == pb.TaskState_FAILED {
 			failedCount++
 		}
 
-		if taskSchedState(child.GetProto()) == DONE {
+		if taskSchedState(child.Proto(nil)) == DONE {
 			doneCount++
 		}
 	}
 
-	nt.pb.Message = fmt.Sprintf("%d/%d", successCount, len(nt.children))
+	nt.Proto(func(pb *pb.Task) { pb.Message = fmt.Sprintf("%d/%d", successCount, len(nt.children)) })
 
 	// Handle termination
 	if doneCount == len(nt.children) {
 		if successCount == len(nt.children) {
-			nt.pb.State = pb.TaskState_SUCCESS
+			nt.SetState(pb.TaskState_SUCCESS)
 		} else {
-			nt.pb.State = pb.TaskState_FAILED
+			nt.SetState(pb.TaskState_FAILED)
 		}
 	}
 }
 
-func (nt *NestedTask) GetProto() *pb.Task {
+func (nt *NestedTask) Proto(updater func(*pb.Task)) *pb.Task {
+	nt.pbMutex.Lock()
+	defer nt.pbMutex.Unlock()
+
+	if updater != nil {
+		updater(&nt.pb)
+	}
+
 	ret := proto.Clone(&nt.pb).(*pb.Task)
 
 	for _, child := range nt.children {
-		ret.Children = append(ret.Children, child.GetProto())
+		ret.Children = append(ret.Children, child.Proto(nil))
 	}
 	return ret
 }
 
 func (nt *NestedTask) SetState(state pb.TaskState) {
-	nt.pb.State = state
+	nt.Proto(func(pb *pb.Task) { pb.State = state })
 }
 
 func (nt *NestedTask) GetChild(name string) TaskInterface {
 
 	for _, child := range nt.children {
-		if child.GetProto().Name == name {
+		if child.Proto(nil).Name == name {
 			return child
 		}
 	}

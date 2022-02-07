@@ -2,6 +2,7 @@ package rnr
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/mplzik/rnr/golang/pkg/pb"
@@ -9,9 +10,10 @@ import (
 )
 
 type Job struct {
-	job  pb.Job
-	root TaskInterface
-	stop chan struct{}
+	pbMutex sync.Mutex
+	job     pb.Job
+	root    TaskInterface
+	stop    chan struct{}
 }
 
 func NewJob(root TaskInterface) *Job {
@@ -42,9 +44,16 @@ func NewJob(root TaskInterface) *Job {
 	return ret
 }
 
-func (j *Job) GetProto() *pb.Job {
+func (j *Job) Proto(updater func(*pb.Job)) *pb.Job {
+	j.pbMutex.Lock()
+	defer j.pbMutex.Unlock()
+
+	if updater != nil {
+		updater(&j.job)
+	}
+
 	ret := proto.Clone(&j.job).(*pb.Job)
-	ret.Root = j.root.GetProto()
+	ret.Root = j.root.Proto(nil)
 
 	return ret
 }
