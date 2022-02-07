@@ -28,7 +28,7 @@ func NewJob(root TaskInterface) *Job {
 	}
 
 	go func() {
-		ticker := time.NewTicker(time.Second)
+		ticker := time.NewTicker(5 * time.Second)
 		for exit := false; !exit; {
 			select {
 			case _, ok := <-ret.stop:
