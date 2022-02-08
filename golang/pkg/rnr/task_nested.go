@@ -14,6 +14,7 @@ type NestedTask struct {
 	pbMutex     sync.Mutex
 	pb          pb.Task
 	children    []TaskInterface
+	oldState    map[*TaskInterface]pb.TaskState
 	parallelism int
 }
 
@@ -21,7 +22,7 @@ func NewNestedTask(name string, parallelism int) *NestedTask {
 	ret := &NestedTask{}
 	ret.pb.Name = name
 	ret.parallelism = parallelism
-
+	ret.oldState = make(map[*TaskInterface]pb.TaskState)
 	return ret
 }
 
@@ -35,6 +36,7 @@ func (nt *NestedTask) Add(task TaskInterface) error {
 	}
 	nt.children = append(nt.children, task)
 	task.SetState(pb.TaskState_PENDING)
+	nt.oldState[&task] = pb.TaskState_PENDING
 
 	return nil
 }
@@ -51,8 +53,12 @@ func (nt *NestedTask) Poll() {
 	// Poll running tasks
 	for i := range nt.children {
 		child := nt.children[i]
+		pb := child.Proto(nil)
 		state := taskSchedState(child.Proto(nil))
-		if state == RUNNING {
+
+		// Poll a task iff it's running or it has its state changed recently
+		if state == RUNNING || pb.State != nt.oldState[&child] {
+			nt.oldState[&child] = pb.State
 			child.Poll()
 			if taskSchedState(child.Proto(nil)) == RUNNING {
 				running++
