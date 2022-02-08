@@ -11,17 +11,17 @@ import (
 
 // CallbackTask
 
-// CallbackTask implements simple task with synchronously called callback.
+// CallbackTask implements a task with synchronously called callback.
 // It returns a boolean indicating whether to transition into a final state and an error in case an error has happened. These values are used to best-effort-update the task's protobuf. If (false, nil) is supplied, the task state will be left untouched
-type SimpleCallbackTask struct {
+type CallbackTask struct {
 	pbMutex  sync.Mutex
 	pb       pb.Task
-	callback func(*SimpleCallbackTask, context.Context) (bool, error)
+	callback func(*CallbackTask, context.Context) (bool, error)
 }
 
-// NewSimpleCallbackTask returns a new callback task.
-func NewSimpleCallbackTask(name string, callback func(*SimpleCallbackTask, context.Context) (bool, error)) *SimpleCallbackTask {
-	ret := &SimpleCallbackTask{}
+// NewCallbackTask returns a new callback task.
+func NewCallbackTask(name string, callback func(*CallbackTask, context.Context) (bool, error)) *CallbackTask {
+	ret := &CallbackTask{}
 
 	ret.pb.Name = name
 	ret.callback = callback
@@ -30,7 +30,7 @@ func NewSimpleCallbackTask(name string, callback func(*SimpleCallbackTask, conte
 }
 
 // Poll synchronously calls the callback
-func (ct *SimpleCallbackTask) Poll() {
+func (ct *CallbackTask) Poll() {
 	if taskSchedState(&ct.pb) != RUNNING {
 		return
 	}
@@ -52,7 +52,7 @@ func (ct *SimpleCallbackTask) Poll() {
 	}
 }
 
-func (ct *SimpleCallbackTask) Proto(updater func(*pb.Task)) *pb.Task {
+func (ct *CallbackTask) Proto(updater func(*pb.Task)) *pb.Task {
 	ct.pbMutex.Lock()
 	defer ct.pbMutex.Unlock()
 
@@ -64,10 +64,13 @@ func (ct *SimpleCallbackTask) Proto(updater func(*pb.Task)) *pb.Task {
 	return ret
 }
 
-func (ct *SimpleCallbackTask) SetState(state pb.TaskState) {
+func (ct *CallbackTask) SetState(state pb.TaskState) {
 	ct.Proto(func(pb *pb.Task) { pb.State = state })
+
+	// An additional call to let the task know about state change
+	go ct.Poll()
 }
 
-func (ct *SimpleCallbackTask) GetChild(name string) TaskInterface {
+func (ct *CallbackTask) GetChild(name string) TaskInterface {
 	return nil
 }
