@@ -71,6 +71,6 @@ func (ct *CallbackTask) SetState(state pb.TaskState) {
 	go ct.Poll()
 }
 
-func (ct *CallbackTask) GetChild(name string) TaskInterface {
+func (ct *CallbackTask) GetChild(name string) Task {
 	return nil
 }

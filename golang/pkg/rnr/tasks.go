@@ -27,10 +27,10 @@ func taskSchedState(pbt *pb.Task) TaskState {
 	return 0 // What should we do here?
 }
 
-// TaskInterface is a generic interface for pollable tasks
-type TaskInterface interface {
+// Task is a generic interface for pollable tasks
+type Task interface {
 	Poll()
 	Proto(updater func(*pb.Task)) *pb.Task
 	SetState(pb.TaskState)
-	GetChild(name string) TaskInterface
+	GetChild(name string) Task
 }

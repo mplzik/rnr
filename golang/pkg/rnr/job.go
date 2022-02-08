@@ -12,11 +12,11 @@ import (
 type Job struct {
 	pbMutex sync.Mutex
 	job     pb.Job
-	root    TaskInterface
+	root    Task
 	stop    chan struct{}
 }
 
-func NewJob(root TaskInterface) *Job {
+func NewJob(root Task) *Job {
 	ret := &Job{
 		job: pb.Job{
 			Version: 1,

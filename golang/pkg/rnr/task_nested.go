@@ -13,8 +13,8 @@ import (
 type NestedTask struct {
 	pbMutex     sync.Mutex
 	pb          pb.Task
-	children    []TaskInterface
-	oldState    map[*TaskInterface]pb.TaskState
+	children    []Task
+	oldState    map[*Task]pb.TaskState
 	parallelism int
 }
 
@@ -22,11 +22,11 @@ func NewNestedTask(name string, parallelism int) *NestedTask {
 	ret := &NestedTask{}
 	ret.pb.Name = name
 	ret.parallelism = parallelism
-	ret.oldState = make(map[*TaskInterface]pb.TaskState)
+	ret.oldState = make(map[*Task]pb.TaskState)
 	return ret
 }
 
-func (nt *NestedTask) Add(task TaskInterface) error {
+func (nt *NestedTask) Add(task Task) error {
 	newName := task.Proto(nil).GetName()
 
 	for _, child := range nt.children {
@@ -48,7 +48,7 @@ func (nt *NestedTask) Poll() {
 	}
 
 	running := 0
-	pending := []TaskInterface{}
+	pending := []Task{}
 
 	// Poll running tasks
 	for i := range nt.children {
@@ -125,7 +125,7 @@ func (nt *NestedTask) SetState(state pb.TaskState) {
 	nt.Proto(func(pb *pb.Task) { pb.State = state })
 }
 
-func (nt *NestedTask) GetChild(name string) TaskInterface {
+func (nt *NestedTask) GetChild(name string) Task {
 
 	for _, child := range nt.children {
 		if child.Proto(nil).Name == name {
