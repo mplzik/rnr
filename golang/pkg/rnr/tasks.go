@@ -4,13 +4,15 @@ import (
 	"github.com/mplzik/rnr/golang/pkg/pb"
 )
 
+type TaskState int
+
 const (
-	PENDING = 0
-	RUNNING = 1
-	DONE    = 2
+	PENDING TaskState = iota
+	RUNNING
+	DONE
 )
 
-func taskSchedState(pbt *pb.Task) int {
+func taskSchedState(pbt *pb.Task) TaskState {
 	switch pbt.State {
 	case pb.TaskState_FAILED, pb.TaskState_SKIPPED, pb.TaskState_SUCCESS:
 		return DONE

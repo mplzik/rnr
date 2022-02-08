@@ -7,7 +7,7 @@ import (
 )
 
 func TestTaskSchedState(t *testing.T) {
-	run := func(name string, exp int, states ...pb.TaskState) {
+	run := func(name string, exp TaskState, states ...pb.TaskState) {
 		t.Run(name, func(t *testing.T) {
 			for _, s := range states {
 				got := taskSchedState(&pb.Task{State: s})
