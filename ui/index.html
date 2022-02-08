@@ -7,6 +7,7 @@
             .task-sched-RUNNING { font-weight: bold; }
             .task-sched-SUCCESS { color: green; }
             .task-sched-FAILED { color: darkred; }
+            .task-sched-ACTION_NEEDED { color: orange; }
             .task-message { font-style: italic; color: grey; margin-left: 2em;}
         </style>
         <script langauge="javascript">
@@ -14,7 +15,7 @@
             var tasks_metadata = {};
             var path_to_id_dict = {};
             var old_uuid = "";
-            var states = ["PENDING", "RUNNING", "SUCCESS", "FAILED", "SKIPPED"]
+            var states = ["PENDING", "RUNNING", "SUCCESS", "FAILED", "SKIPPED", "ACTION_NEEDED"]
 
             function path_to_id(path) {
                 if (!(path in path_to_id_dict)) {

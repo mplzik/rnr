@@ -15,7 +15,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0btasks.proto\x12\x03rnr\"=\n\x03Job\x12\x0f\n\x07version\x18\x01 \x01(\x03\x12\x0c\n\x04uuid\x18\x02 \x01(\t\x12\x17\n\x04root\x18\x03 \x01(\x0b\x32\t.rnr.Task\"a\n\x04Task\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x1d\n\x05state\x18\x03 \x01(\x0e\x32\x0e.rnr.TaskState\x12\x0f\n\x07message\x18\x04 \x01(\t\x12\x1b\n\x08\x63hildren\x18\x05 \x03(\x0b\x32\t.rnr.Task\":\n\x0bTaskRequest\x12\x0c\n\x04path\x18\x01 \x03(\t\x12\x1d\n\x05state\x18\x02 \x01(\x0e\x32\x0e.rnr.TaskState*X\n\tTaskState\x12\x0b\n\x07UNKNOWN\x10\x00\x12\x0b\n\x07PENDING\x10\x01\x12\x0b\n\x07RUNNING\x10\x02\x12\x0b\n\x07SUCCESS\x10\x03\x12\n\n\x06\x46\x41ILED\x10\x04\x12\x0b\n\x07SKIPPED\x10\x05\x42\x06Z\x04./pbb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0btasks.proto\x12\x03rnr\"=\n\x03Job\x12\x0f\n\x07version\x18\x01 \x01(\x03\x12\x0c\n\x04uuid\x18\x02 \x01(\t\x12\x17\n\x04root\x18\x03 \x01(\x0b\x32\t.rnr.Task\"a\n\x04Task\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x1d\n\x05state\x18\x03 \x01(\x0e\x32\x0e.rnr.TaskState\x12\x0f\n\x07message\x18\x04 \x01(\t\x12\x1b\n\x08\x63hildren\x18\x05 \x03(\x0b\x32\t.rnr.Task\":\n\x0bTaskRequest\x12\x0c\n\x04path\x18\x01 \x03(\t\x12\x1d\n\x05state\x18\x02 \x01(\x0e\x32\x0e.rnr.TaskState*k\n\tTaskState\x12\x0b\n\x07UNKNOWN\x10\x00\x12\x0b\n\x07PENDING\x10\x01\x12\x0b\n\x07RUNNING\x10\x02\x12\x0b\n\x07SUCCESS\x10\x03\x12\n\n\x06\x46\x41ILED\x10\x04\x12\x0b\n\x07SKIPPED\x10\x05\x12\x11\n\rACTION_NEEDED\x10\x06\x42\x06Z\x04./pbb\x06proto3')
 
 _TASKSTATE = DESCRIPTOR.enum_types_by_name['TaskState']
 TaskState = enum_type_wrapper.EnumTypeWrapper(_TASKSTATE)
@@ -25,6 +25,7 @@ RUNNING = 2
 SUCCESS = 3
 FAILED = 4
 SKIPPED = 5
+ACTION_NEEDED = 6
 
 
 _JOB = DESCRIPTOR.message_types_by_name['Job']
@@ -56,7 +57,7 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   DESCRIPTOR._options = None
   DESCRIPTOR._serialized_options = b'Z\004./pb'
   _TASKSTATE._serialized_start=242
-  _TASKSTATE._serialized_end=330
+  _TASKSTATE._serialized_end=349
   _JOB._serialized_start=20
   _JOB._serialized_end=81
   _TASK._serialized_start=83

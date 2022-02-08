@@ -12,11 +12,12 @@ const (
 
 func taskSchedState(pbt *pb.Task) int {
 	m := map[pb.TaskState]int{
-		pb.TaskState_FAILED:  DONE,
-		pb.TaskState_PENDING: PENDING,
-		pb.TaskState_RUNNING: RUNNING,
-		pb.TaskState_SKIPPED: DONE,
-		pb.TaskState_SUCCESS: DONE,
+		pb.TaskState_FAILED:        DONE,
+		pb.TaskState_PENDING:       PENDING,
+		pb.TaskState_RUNNING:       RUNNING,
+		pb.TaskState_SKIPPED:       DONE,
+		pb.TaskState_SUCCESS:       DONE,
+		pb.TaskState_ACTION_NEEDED: RUNNING,
 	}
 
 	return m[pbt.State]
