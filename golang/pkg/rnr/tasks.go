@@ -11,16 +11,18 @@ const (
 )
 
 func taskSchedState(pbt *pb.Task) int {
-	m := map[pb.TaskState]int{
-		pb.TaskState_FAILED:        DONE,
-		pb.TaskState_PENDING:       PENDING,
-		pb.TaskState_RUNNING:       RUNNING,
-		pb.TaskState_SKIPPED:       DONE,
-		pb.TaskState_SUCCESS:       DONE,
-		pb.TaskState_ACTION_NEEDED: RUNNING,
+	switch pbt.State {
+	case pb.TaskState_FAILED, pb.TaskState_SKIPPED, pb.TaskState_SUCCESS:
+		return DONE
+
+	case pb.TaskState_PENDING:
+		return PENDING
+
+	case pb.TaskState_ACTION_NEEDED, pb.TaskState_RUNNING:
+		return RUNNING
 	}
 
-	return m[pbt.State]
+	return 0 // What should we do here?
 }
 
 // TaskInterface is a generic interface for pollable tasks
