@@ -7,7 +7,8 @@ import (
 type TaskState int
 
 const (
-	PENDING TaskState = iota
+	UNKNOWN TaskState = iota
+	PENDING
 	RUNNING
 	DONE
 )
@@ -24,7 +25,7 @@ func taskSchedState(pbt *pb.Task) TaskState {
 		return RUNNING
 	}
 
-	return 0 // What should we do here?
+	return UNKNOWN
 }
 
 // Task is a generic interface for pollable tasks
