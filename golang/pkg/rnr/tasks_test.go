@@ -1,6 +1,7 @@
 package rnr
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/mplzik/rnr/golang/pkg/pb"
@@ -23,4 +24,19 @@ func TestTaskSchedState(t *testing.T) {
 	run("PENDING", PENDING, pb.TaskState_PENDING)
 
 	run("RUNNING", RUNNING, pb.TaskState_ACTION_NEEDED, pb.TaskState_RUNNING)
+
+	// test we defined results for all pb.TaskState
+	for name, state := range pb.TaskState_value {
+		t.Run(fmt.Sprintf("pb.TaskState_%s", name), func(t *testing.T) {
+			got := taskSchedState(&pb.Task{State: pb.TaskState(state)})
+
+			if name == "UNKNOWN" {
+				if got != 0 {
+					t.Errorf("UNKNOWN should be map to 0, got %v", got)
+				}
+			} else if got == 0 {
+				t.Errorf("missing mapping for TaskState_%s", name)
+			}
+		})
+	}
 }
