@@ -9,6 +9,8 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+type CallbackFunc func(*CallbackTask, context.Context) (bool, error)
+
 // CallbackTask
 
 // CallbackTask implements a task with synchronously called callback.
@@ -16,11 +18,11 @@ import (
 type CallbackTask struct {
 	pbMutex  sync.Mutex
 	pb       pb.Task
-	callback func(*CallbackTask, context.Context) (bool, error)
+	callback CallbackFunc
 }
 
 // NewCallbackTask returns a new callback task.
-func NewCallbackTask(name string, callback func(*CallbackTask, context.Context) (bool, error)) *CallbackTask {
+func NewCallbackTask(name string, callback CallbackFunc) *CallbackTask {
 	ret := &CallbackTask{}
 
 	ret.pb.Name = name
@@ -71,6 +73,6 @@ func (ct *CallbackTask) SetState(state pb.TaskState) {
 	go ct.Poll()
 }
 
-func (ct *CallbackTask) GetChild(name string) TaskInterface {
+func (ct *CallbackTask) GetChild(name string) Task {
 	return nil
 }

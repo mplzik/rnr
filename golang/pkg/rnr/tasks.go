@@ -4,29 +4,34 @@ import (
 	"github.com/mplzik/rnr/golang/pkg/pb"
 )
 
+type TaskState int
+
 const (
-	PENDING = 0
-	RUNNING = 1
-	DONE    = 2
+	UNKNOWN TaskState = iota
+	PENDING
+	RUNNING
+	DONE
 )
 
-func taskSchedState(pbt *pb.Task) int {
-	m := map[pb.TaskState]int{
-		pb.TaskState_FAILED:        DONE,
-		pb.TaskState_PENDING:       PENDING,
-		pb.TaskState_RUNNING:       RUNNING,
-		pb.TaskState_SKIPPED:       DONE,
-		pb.TaskState_SUCCESS:       DONE,
-		pb.TaskState_ACTION_NEEDED: RUNNING,
+func taskSchedState(pbt *pb.Task) TaskState {
+	switch pbt.State {
+	case pb.TaskState_FAILED, pb.TaskState_SKIPPED, pb.TaskState_SUCCESS:
+		return DONE
+
+	case pb.TaskState_PENDING:
+		return PENDING
+
+	case pb.TaskState_ACTION_NEEDED, pb.TaskState_RUNNING:
+		return RUNNING
 	}
 
-	return m[pbt.State]
+	return UNKNOWN
 }
 
-// TaskInterface is a generic interface for pollable tasks
-type TaskInterface interface {
+// Task is a generic interface for pollable tasks
+type Task interface {
 	Poll()
 	Proto(updater func(*pb.Task)) *pb.Task
 	SetState(pb.TaskState)
-	GetChild(name string) TaskInterface
+	GetChild(name string) Task
 }

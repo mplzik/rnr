@@ -13,7 +13,7 @@ import (
 type ShellTask struct {
 	pbMutex  sync.Mutex
 	pb       pb.Task
-	children []TaskInterface
+	children []Task
 	cmdName  string
 	cmdArgs  []string
 	err      chan error
@@ -74,6 +74,6 @@ func (nt *ShellTask) SetState(state pb.TaskState) {
 	nt.Proto(func(pb *pb.Task) { pb.State = state })
 }
 
-func (nt *ShellTask) GetChild(name string) TaskInterface {
+func (nt *ShellTask) GetChild(name string) Task {
 	return nil
 }
