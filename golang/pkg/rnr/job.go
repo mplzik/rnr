@@ -2,6 +2,9 @@ package rnr
 
 import (
 	"fmt"
+	"log"
+	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -10,10 +13,11 @@ import (
 )
 
 type Job struct {
-	pbMutex sync.Mutex
-	job     pb.Job
-	root    Task
-	stop    chan struct{}
+	pbMutex  sync.Mutex
+	job      pb.Job
+	root     Task
+	stop     chan struct{}
+	oldProto *pb.Task
 }
 
 func NewJob(root Task) *Job {
@@ -36,7 +40,7 @@ func NewJob(root Task) *Job {
 					exit = true
 				}
 			case <-ticker.C:
-				ret.root.Poll()
+				ret.Poll()
 			}
 		}
 	}()
@@ -58,8 +62,81 @@ func (j *Job) Proto(updater func(*pb.Job)) *pb.Job {
 	return ret
 }
 
+// taskDiff recursively walks the task protobufs and calculates any differences
+func taskDiff(path []string, old *pb.Task, new *pb.Task) []string {
+	var ret []string
+
+	oldState := "(new)"
+	newState := "(deleted)"
+	oldMessage := ""
+	newMessage := ""
+
+	if old != nil {
+		oldState = old.State.String()
+		oldMessage = old.GetMessage()
+	}
+	if new != nil {
+		newState = new.State.String()
+		newMessage = new.GetMessage()
+	}
+
+	if oldState != newState || oldMessage != newMessage {
+		ret = append(ret, fmt.Sprintf("[%s]: %s (%s) -> %s (%s)", strings.Join(path, "/"), oldState, oldMessage, newState, newMessage))
+	}
+
+	// Check children
+	childrenMap := make(map[string]struct{})
+	oldChildren := make(map[string]*pb.Task)
+	if old != nil {
+		for _, c := range old.Children {
+			childrenMap[c.Name] = struct{}{}
+			oldChildren[c.Name] = c
+		}
+	}
+
+	newChildren := make(map[string]*pb.Task)
+	if new != nil {
+		for _, c := range new.Children {
+			childrenMap[c.Name] = struct{}{}
+			newChildren[c.Name] = c
+		}
+	}
+
+	children := make([]string, 0, len(childrenMap))
+
+	// `children` is now a list of unique children names
+	for key, _ := range childrenMap {
+		children = append(children, key)
+	}
+
+	sort.Strings(children)
+
+	for _, child := range children {
+		oldChild, _ := oldChildren[child]
+		newChild, _ := newChildren[child]
+		taskName := "(unknown)"
+		if newChild != nil {
+			taskName = newChild.Name
+		} else if oldChild != nil {
+			taskName = oldChild.Name
+		} else {
+			// This shouldn't happen, since `children` is constructed from old and new children
+		}
+		ret = append(ret, taskDiff(append(path, taskName), oldChild, newChild)...)
+	}
+
+	return ret
+}
+
 func (j *Job) Poll() {
 	j.root.Poll()
+
+	newProto := j.root.Proto(nil)
+	// Calculate diff and post state changes
+	diff := taskDiff([]string{newProto.GetName()}, j.oldProto, newProto)
+
+	log.Printf("State changed: %s\n", strings.Join(diff, "\n"))
+	j.oldProto = proto.Clone(newProto).(*pb.Task)
 }
 
 func (j *Job) TaskRequest(r *pb.TaskRequest) error {
