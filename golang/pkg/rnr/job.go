@@ -85,11 +85,11 @@ func taskDiff(path []string, old *pb.Task, new *pb.Task) []string {
 	}
 
 	// Check children
-	childrenMap := make(map[string]bool)
+	childrenMap := make(map[string]struct{})
 	oldChildren := make(map[string]*pb.Task)
 	if old != nil {
 		for _, c := range old.Children {
-			childrenMap[c.Name] = true
+			childrenMap[c.Name] = struct{}{}
 			oldChildren[c.Name] = c
 		}
 	}
@@ -97,7 +97,7 @@ func taskDiff(path []string, old *pb.Task, new *pb.Task) []string {
 	newChildren := make(map[string]*pb.Task)
 	if new != nil {
 		for _, c := range new.Children {
-			childrenMap[c.Name] = true
+			childrenMap[c.Name] = struct{}{}
 			newChildren[c.Name] = c
 		}
 	}
