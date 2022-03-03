@@ -102,7 +102,7 @@ func taskDiff(path []string, old *pb.Task, new *pb.Task) []string {
 		}
 	}
 
-	children := []string{}
+	children := make([]string, 0, len(childrenMap))
 
 	// `children` is now a list of unique children names
 	for key, _ := range childrenMap {
