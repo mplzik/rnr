@@ -21,12 +21,12 @@ type ShellTask struct {
 	cmd *exec.Cmd
 }
 
-func NewShellTask(name string, cmdArg ...string) *ShellTask {
+func NewShellTask(name, cmd string, args ...string) *ShellTask {
 	ret := &ShellTask{}
 
 	ret.pb.Name = name
-	ret.cmdName = cmdArg[0]
-	ret.cmdArgs = cmdArg[1:]
+	ret.cmdName = cmd
+	ret.cmdArgs = args
 
 	ret.cmd = exec.Command(ret.cmdName, ret.cmdArgs...)
 	ret.err = make(chan error)
