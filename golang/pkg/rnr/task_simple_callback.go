@@ -37,7 +37,8 @@ func (ct *CallbackTask) Poll() {
 		return
 	}
 
-	ctx, _ := context.WithTimeout(context.Background(), 1*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
 	ret, err := ct.callback(ct, ctx)
 
 	if ret {
