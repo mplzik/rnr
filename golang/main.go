@@ -17,7 +17,7 @@ func main() {
 	job := rnr.NewJob(n)
 
 	for i := 0; i < 100; i++ {
-		n.Add(rnr.NewCallbackTask(fmt.Sprintf("Hello %d", i), func(_ *rnr.CallbackTask, ctx context.Context) (bool, error) {
+		n.Add(rnr.NewCallbackTask(fmt.Sprintf("Hello %d", i), func(context.Context, *rnr.CallbackTask) (bool, error) {
 			if rand.Intn(3) > 1 {
 				return true, nil
 			} else {
