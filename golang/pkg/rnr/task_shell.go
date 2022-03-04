@@ -4,7 +4,7 @@ import (
 	"os/exec"
 	"sync"
 
-	proto "github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/proto"
 	"github.com/mplzik/rnr/golang/pkg/pb"
 )
 
