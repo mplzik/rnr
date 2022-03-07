@@ -9,7 +9,7 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-type CallbackFunc func(*CallbackTask, context.Context) (bool, error)
+type CallbackFunc func(context.Context, *CallbackTask) (bool, error)
 
 // CallbackTask
 
@@ -37,8 +37,9 @@ func (ct *CallbackTask) Poll() {
 		return
 	}
 
-	ctx, _ := context.WithTimeout(context.Background(), 1*time.Second)
-	ret, err := ct.callback(ct, ctx)
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+	ret, err := ct.callback(ctx, ct)
 
 	if ret {
 		if err == nil {
