@@ -33,12 +33,14 @@ func NewCallbackTask(name string, callback CallbackFunc) *CallbackTask {
 
 // Poll synchronously calls the callback
 func (ct *CallbackTask) Poll() {
-	if taskSchedState(&ct.pb) != RUNNING {
+	if taskSchedState(&ct.pb) == RUNNING {
 		return
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
+
+	ct.pb.State = pb.TaskState_RUNNING
 	ret, err := ct.callback(ctx, ct)
 
 	if ret {
