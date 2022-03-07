@@ -40,3 +40,23 @@ func BenchmarkNestedTask_Add(b *testing.B) {
 		})
 	}
 }
+
+func TestNestedTask_GetChild(t *testing.T) {
+	nt := NewNestedTask("nested task test", 1)
+	ct1 := newMockTask("child 1")
+	ct2 := newMockTask("child 2")
+
+	nt.Add(ct1)
+	nt.Add(ct2)
+
+	if ct := nt.GetChild("child 1"); ct != ct1 {
+		t.Errorf("expecting GetChild to return %v, got %v", ct1, ct)
+	}
+	if ct := nt.GetChild("child 2"); ct != ct2 {
+		t.Errorf("expecting GetChild to return %v, got %v", ct2, ct)
+	}
+
+	if ct := nt.GetChild("foobar"); ct != nil {
+		t.Errorf("expecting GetChild to return nil, got %v", ct)
+	}
+}
