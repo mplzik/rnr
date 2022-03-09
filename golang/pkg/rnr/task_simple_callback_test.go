@@ -21,26 +21,45 @@ func TestCallbackTask_Poll(t *testing.T) {
 
 	ct := NewCallbackTask("callback test", fn)
 
-	ct.Poll()
+	{ // shouldn't call callback because task isn't running
+		ct.Poll()
 
-	if callsCount < 1 {
-		t.Fatal("expecting callback function to be invoked")
+		if callsCount != 0 {
+			t.Fatalf("callback task shouldn't have been called because it's not running (%d calls)", callsCount)
+		}
 	}
 
-	ct.Poll()
+	{ // should call the callback when task is running without changing task state
+		ct.SetState(pb.TaskState_RUNNING)
 
-	if callsCount > 1 {
-		t.Error("should have invoked the callback function once")
+		ct.Poll()
+
+		if callsCount < 1 {
+			t.Fatal("expecting callback function to be invoked")
+		}
+		if s := ct.Proto(nil).State; s != pb.TaskState_RUNNING {
+			t.Fatalf("expecting task state %v, got %v", pb.TaskState_RUNNING, s)
+		}
 	}
 
-	// changine state should call Poll again. This is something we
-	// *shouldn't* know about it.
-	ct.SetState(pb.TaskState_UNKNOWN)
+	{ // should change state when callback is done
+		ct.Poll()
 
-	ct.Poll()
+		if callsCount != 2 {
+			t.Errorf("should have invoked the callback function twice (%d calls)", callsCount)
+		}
+		if s := ct.Proto(nil).State; s != pb.TaskState_SUCCESS {
+			t.Fatalf("expecting task state %v, got %v", pb.TaskState_SUCCESS, s)
+		}
+	}
 
-	if callsCount != 2 {
-		t.Errorf("expecting callback to be invoked twice, got %d invokations", callsCount)
+	{ // shouldn't call the callback
+		oldCount := callsCount
+		ct.Poll()
+
+		if callsCount != oldCount {
+			t.Errorf("expecting callback to be invoked %d times, got %d invokations", oldCount, callsCount)
+		}
 	}
 
 	t.Run("callback returns error", func(t *testing.T) {
@@ -50,6 +69,7 @@ func TestCallbackTask_Poll(t *testing.T) {
 		}
 		ct := NewCallbackTask("failing callback test", fn)
 
+		ct.SetState(pb.TaskState_RUNNING)
 		ct.Poll()
 
 		pbt := ct.Proto(nil)
@@ -57,10 +77,9 @@ func TestCallbackTask_Poll(t *testing.T) {
 			t.Errorf("shouldn't update task state: %v", s)
 		}
 		if exp := "done false"; pbt.Message != exp {
-			t.Errorf("expectiing message to be %q, got %q", exp, pbt.Message)
+			t.Errorf("expeciing message to be %q, got %q", exp, pbt.Message)
 		}
 
-		ct.SetState(pb.TaskState_UNKNOWN)
 		done = true
 
 		ct.Poll()
