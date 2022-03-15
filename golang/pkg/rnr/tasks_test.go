@@ -40,3 +40,31 @@ func TestTaskSchedState(t *testing.T) {
 		})
 	}
 }
+
+// Mock task useful for testing
+var _ Task = &mockTask{} // quick compiler check mockTask fulfills the interface
+
+type mockTask struct {
+	pbTask *pb.Task
+}
+
+// Not useful at the moment
+func (m *mockTask) Poll()                 {}
+func (m *mockTask) SetState(pb.TaskState) {}
+func (m *mockTask) GetChild(string) Task  { return nil }
+
+func (m *mockTask) Proto(updater func(*pb.Task)) *pb.Task {
+	if updater != nil {
+		updater(m.pbTask)
+	}
+
+	return m.pbTask
+}
+
+func newMockTask(name string) *mockTask {
+	return &mockTask{
+		pbTask: &pb.Task{
+			Name: name,
+		},
+	}
+}
