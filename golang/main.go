@@ -21,7 +21,7 @@ func main() {
 			if rand.Intn(3) > 1 {
 				return true, nil
 			} else {
-				return true, fmt.Errorf("bad luck")
+				return true, fmt.Errorf("bad luck: http://www.grafana.com")
 			}
 		}))
 	}
