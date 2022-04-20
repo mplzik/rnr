@@ -7,6 +7,7 @@ import Http
 import Time
 import Proto exposing (..)
 import Html.Events exposing (onClick)
+import Regex
 
 -- MAIN
 
@@ -114,12 +115,30 @@ taskStyle task = case task.state of
   "ACTION_NEEDED" -> [ attribute "style" "color: orange" ]
   _ -> []
 
+hrefRegex : Regex.Regex
+hrefRegex =
+  Maybe.withDefault Regex.never <|
+    Regex.fromString "https?://\\S+"
+
+autolink : String -> List (Html Msg)
+autolink message =
+  let
+    match = Regex.findAtMost 1 hrefRegex message
+  in
+  case match of
+    [] -> if message /= "" then [text message] else []
+    href :: _ ->
+      let
+        leftPrefix = String.left href.index message
+      in
+        (if leftPrefix /= "" then [text leftPrefix] else []) ++ [a [attribute "href" href.match] [text href.match]] ++ autolink (String.dropLeft (href.index + String.length href.match) message)
+
 viewTaskHeadline : List String -> Task -> Html Msg
 viewTaskHeadline path task = span [] [ 
   span (taskStyle task) [ viewTaskState path task, text " ", text task.name ]
-  , text " ", i [] [text task.message]
+  , text " ", i [] (autolink task.message)
   ]
-  
+
 viewTaskState : List String -> Task -> Html Msg
 viewTaskState path task = select [ Html.Events.onInput (PostTaskRequest path) ] (
   List.map (\(ts, s) -> option [Html.Attributes.selected (task.state == s) ] [ text s ]) 
