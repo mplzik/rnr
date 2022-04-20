@@ -135,7 +135,10 @@ func (j *Job) Poll() {
 	// Calculate diff and post state changes
 	diff := taskDiff([]string{newProto.GetName()}, j.oldProto, newProto)
 
-	log.Printf("State changed: %s\n", strings.Join(diff, "\n"))
+	if len(diff) > 0 {
+		log.Printf("State changed: %s\n", strings.Join(diff, "\n"))
+	}
+
 	j.oldProto = proto.Clone(newProto).(*pb.Task)
 }
 
