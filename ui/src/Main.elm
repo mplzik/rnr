@@ -100,7 +100,6 @@ viewTask path task =
     if List.length children > 0 then
       details [] ([ 
         summary [] [ viewTaskHeadline path task ], 
-        text task.state,
         ul [attribute "style" "list-style-type: none"] (List.map (\child -> li [] [viewTask (path ++ [child.name]) child]) children)
       ])
     else
