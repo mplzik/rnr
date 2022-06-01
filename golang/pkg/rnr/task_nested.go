@@ -11,18 +11,29 @@ import (
 // Nested Task
 
 type NestedTask struct {
-	pbMutex     sync.Mutex
-	pb          pb.Task
-	children    []Task
-	oldState    map[*Task]pb.TaskState
-	parallelism int
+	pbMutex  sync.Mutex
+	pb       pb.Task
+	children []Task
+	oldState map[*Task]pb.TaskState
+	opts     NestedTaskOptions
 }
 
-func NewNestedTask(name string, parallelism int) *NestedTask {
+type NestedTaskOptions struct {
+	Parallelism int  // the number of tasks to run in parallel; defaults to 1
+	CompleteAll bool // if `true`, the NestedTask will attempt to run all tasks before transitioning to either SUCCEEDED or FAILED state.
+}
+
+func NewNestedTask(name string, opts *NestedTaskOptions) *NestedTask {
 	ret := &NestedTask{}
 	ret.pb.Name = name
-	ret.parallelism = parallelism
 	ret.oldState = make(map[*Task]pb.TaskState)
+	ret.opts = *opts
+
+	// Sanitize opts
+	if ret.opts.Parallelism < 1 {
+		ret.opts.Parallelism = 1
+	}
+
 	return ret
 }
 
@@ -50,19 +61,14 @@ func (nt *NestedTask) Poll() {
 	running := 0
 	pending := []Task{}
 
-	// Poll running tasks
+	// Perform scheduling
 	for i := range nt.children {
 		child := nt.children[i]
-		pb := child.Proto(nil)
 		state := taskSchedState(child.Proto(nil))
 
-		// Poll a task iff it's running or it has its state changed recently
-		if state == RUNNING || pb.State != nt.oldState[&child] {
-			nt.oldState[&child] = pb.State
-			child.Poll()
-			if taskSchedState(child.Proto(nil)) == RUNNING {
-				running++
-			}
+		// Count running tasks
+		if state == RUNNING {
+			running++
 		}
 
 		if state == PENDING {
@@ -70,25 +76,40 @@ func (nt *NestedTask) Poll() {
 		}
 	}
 
-	// Add more running tasks, if applicable
-	for (running < nt.parallelism) && len(pending) > 0 {
+	// Add more running tasks, if applicable. Don't try to stop tasks -- these have been likely invoked manually.
+	for (running < nt.opts.Parallelism) && len(pending) > 0 {
 		// TODO: we shouldn't be mutating the PB this way; let's add a mutating function to the task interface.
 		pending[0].SetState(pb.TaskState_RUNNING)
 		pending = pending[1:]
 		running++
 	}
 
+	// Poll the running or changed tasks
+	for i := range nt.children {
+		child := nt.children[i]
+		pb := child.Proto(nil)
+		state := taskSchedState(pb)
+
+		// Poll a task iff it's running or it has its state changed recently
+		if state == RUNNING || pb.State != nt.oldState[&child] {
+			nt.oldState[&child] = pb.State
+			child.Poll()
+		}
+
+	}
+
 	successCount := 0
 	failedCount := 0
 	doneCount := 0
 	for _, child := range nt.children {
-		if child.Proto(nil).State == pb.TaskState_SUCCESS {
+		cpb := child.Proto(nil)
+		if cpb.State == pb.TaskState_SUCCESS {
 			successCount++
-		} else if child.Proto(nil).State == pb.TaskState_FAILED {
+		} else if cpb.State == pb.TaskState_FAILED {
 			failedCount++
 		}
 
-		if taskSchedState(child.Proto(nil)) == DONE {
+		if taskSchedState(cpb) == DONE {
 			doneCount++
 		}
 	}
@@ -96,6 +117,15 @@ func (nt *NestedTask) Poll() {
 	nt.Proto(func(pb *pb.Task) { pb.Message = fmt.Sprintf("%d/%d", successCount, len(nt.children)) })
 
 	// Handle termination
+
+	if !nt.opts.CompleteAll {
+		if failedCount > 0 {
+			// Fail everything on a first failed task.
+			nt.SetState(pb.TaskState_FAILED)
+			return
+		}
+	}
+
 	if doneCount == len(nt.children) {
 		if successCount == len(nt.children) {
 			nt.SetState(pb.TaskState_SUCCESS)
