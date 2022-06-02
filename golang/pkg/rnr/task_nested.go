@@ -85,8 +85,7 @@ func (nt *NestedTask) Poll() {
 	}
 
 	// Poll the running or changed tasks
-	for i := range nt.children {
-		child := nt.children[i]
+	for _, child := range nt.children {
 		pb := child.Proto(nil)
 		state := taskSchedState(pb)
 
