@@ -8,7 +8,7 @@ import (
 )
 
 func TestNestedTask_Add(t *testing.T) {
-	nt := NewNestedTask("nested task test", &NestedTaskOptions{Parallelism: 1})
+	nt := NewNestedTask("nested task test", NestedTaskOptions{})
 
 	for _, tn := range []string{"foo", "bar"} {
 		ct := newMockTask(tn)
@@ -34,7 +34,7 @@ func BenchmarkNestedTask_Add(b *testing.B) {
 
 		b.Run(name, func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
-				nt := NewNestedTask(name, &NestedTaskOptions{})
+				nt := NewNestedTask(name, NestedTaskOptions{})
 				for _, t := range tasks {
 					nt.Add(t)
 				}
@@ -44,7 +44,7 @@ func BenchmarkNestedTask_Add(b *testing.B) {
 }
 
 func TestNestedTask_GetChild(t *testing.T) {
-	nt := NewNestedTask("nested task test", &NestedTaskOptions{Parallelism: 1})
+	nt := NewNestedTask("nested task test", NestedTaskOptions{Parallelism: 1})
 	ct1 := newMockTask("child 1")
 	ct2 := newMockTask("child 2")
 
@@ -64,7 +64,7 @@ func TestNestedTask_GetChild(t *testing.T) {
 }
 
 func TestNestedTask_FailFirst(t *testing.T) {
-	nt := NewNestedTask("nested task test", &NestedTaskOptions{Parallelism: 1, CompleteAll: false})
+	nt := NewNestedTask("nested task test", NestedTaskOptions{Parallelism: 1, CompleteAll: false})
 	ct1 := newMockFailingTask("child 1")
 	ct2 := newMockTask("child 2")
 
@@ -86,7 +86,7 @@ func TestNestedTask_FailFirst(t *testing.T) {
 }
 
 func TestNestedTask_CompleteAllFail(t *testing.T) {
-	nt := NewNestedTask("nested task test", &NestedTaskOptions{Parallelism: 1, CompleteAll: true})
+	nt := NewNestedTask("nested task test", NestedTaskOptions{Parallelism: 1, CompleteAll: true})
 	ct1 := newMockFailingTask("child 1")
 	ct2 := newMockTask("child 2")
 
@@ -122,7 +122,7 @@ func TestNestedTask_CompleteAllFail(t *testing.T) {
 func TestNestedTask_CompleteAllSuccess(t *testing.T) {
 	ct1 := newMockTask("child 1")
 	ct2 := newMockTask("child 2")
-	nt := NewNestedTask("nested task test", &NestedTaskOptions{Parallelism: 1, CompleteAll: true})
+	nt := NewNestedTask("nested task test", NestedTaskOptions{Parallelism: 1, CompleteAll: true})
 
 	tasks := []Task{ct1, ct2, nt}
 

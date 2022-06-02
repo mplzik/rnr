@@ -23,11 +23,11 @@ type NestedTaskOptions struct {
 	CompleteAll bool // if `true`, the NestedTask will attempt to run all tasks before transitioning to either SUCCEEDED or FAILED state.
 }
 
-func NewNestedTask(name string, opts *NestedTaskOptions) *NestedTask {
+func NewNestedTask(name string, opts NestedTaskOptions) *NestedTask {
 	ret := &NestedTask{}
 	ret.pb.Name = name
 	ret.oldState = make(map[*Task]pb.TaskState)
-	ret.opts = *opts
+	ret.opts = opts
 
 	// Sanitize opts
 	if ret.opts.Parallelism < 1 {
