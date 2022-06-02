@@ -116,13 +116,10 @@ func (nt *NestedTask) Poll() {
 	nt.Proto(func(pb *pb.Task) { pb.Message = fmt.Sprintf("%d/%d", successCount, len(nt.children)) })
 
 	// Handle termination
-
-	if !nt.opts.CompleteAll {
-		if failedCount > 0 {
-			// Fail everything on a first failed task.
-			nt.SetState(pb.TaskState_FAILED)
-			return
-		}
+	if !nt.opts.CompleteAll && failedCount > 0 {
+		// Fail everything on a first failed task.
+		nt.SetState(pb.TaskState_FAILED)
+		return
 	}
 
 	if doneCount == len(nt.children) {
