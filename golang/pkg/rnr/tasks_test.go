@@ -94,11 +94,11 @@ func compareTaskStates(t *testing.T, tasks []Task, states []pb.TaskState) {
 		t.Errorf("`tasks` and `states` should have the same length (%d != %d)", len(tasks), len(states))
 	}
 
-	for i := range tasks {
-		task := tasks[i]
-		state := task.Proto(nil).State
-		if state != states[i] {
-			t.Errorf("Task `%s` expected to be in state %s, but was in %s instead.", task.Proto(nil).Name, states[i], state)
+	for i, task := range tasks {
+		p := task.Proto(nil)
+		
+		if state := p.State; state != states[i] {
+			t.Errorf("Task `%s` expected to be in state %s, but was in %s instead.", p.Name, states[i], state)
 		}
 	}
 }
