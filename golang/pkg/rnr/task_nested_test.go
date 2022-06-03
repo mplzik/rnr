@@ -68,21 +68,14 @@ func TestNestedTask_FailFirst(t *testing.T) {
 	ct1 := newMockFailingTask("child 1")
 	ct2 := newMockTask("child 2")
 
+	tasks := []Task{ct1, ct2, nt}
+
 	nt.Add(ct1)
 	nt.Add(ct2)
 	nt.SetState(pb.TaskState_RUNNING)
 
 	nt.Poll()
-
-	if ct1.pbTask.State != pb.TaskState_FAILED {
-		t.Errorf("expecting child 1 to be in failed state, got %v", ct1.pbTask.State)
-	}
-	if ct2.pbTask.State != pb.TaskState_PENDING {
-		t.Errorf("expecting child 2 to be in pending state, got %v", ct2.pbTask.State)
-	}
-	if nt.pb.State != pb.TaskState_FAILED {
-		t.Errorf("expecting child 2 to be in failed state, got %v", nt.pb.State)
-	}
+	compareTaskStates(t, tasks, []pb.TaskState{pb.TaskState_FAILED, pb.TaskState_PENDING, pb.TaskState_FAILED})
 }
 
 func TestNestedTask_CompleteAllFail(t *testing.T) {
@@ -90,33 +83,17 @@ func TestNestedTask_CompleteAllFail(t *testing.T) {
 	ct1 := newMockFailingTask("child 1")
 	ct2 := newMockTask("child 2")
 
+	tasks := []Task{ct1, ct2, nt}
+
 	nt.Add(ct1)
 	nt.Add(ct2)
 	nt.SetState(pb.TaskState_RUNNING)
 
 	nt.Poll()
-
-	if ct1.pbTask.State != pb.TaskState_FAILED {
-		t.Errorf("expecting child 1 to be in failed state, got %v", ct1.pbTask.State)
-	}
-	if ct2.pbTask.State != pb.TaskState_PENDING {
-		t.Errorf("expecting child 2 to be in pending state, got %v", ct2.pbTask.State)
-	}
-	if nt.pb.State != pb.TaskState_RUNNING {
-		t.Errorf("expecting child 2 to be in running state, got %v", nt.pb.State)
-	}
+	compareTaskStates(t, tasks, []pb.TaskState{pb.TaskState_FAILED, pb.TaskState_PENDING, pb.TaskState_RUNNING})
 
 	nt.Poll()
-
-	if ct1.pbTask.State != pb.TaskState_FAILED {
-		t.Errorf("expecting child 1 to be in failed state, got %v", ct1.pbTask.State)
-	}
-	if ct2.pbTask.State != pb.TaskState_SUCCESS {
-		t.Errorf("expecting child 2 to be in succeeded state, got %v", ct2.pbTask.State)
-	}
-	if nt.pb.State != pb.TaskState_FAILED {
-		t.Errorf("expecting child 2 to be in failed state, got %v", nt.pb.State)
-	}
+	compareTaskStates(t, tasks, []pb.TaskState{pb.TaskState_FAILED, pb.TaskState_SUCCESS, pb.TaskState_FAILED})
 }
 
 func TestNestedTask_CompleteAllSuccess(t *testing.T) {
