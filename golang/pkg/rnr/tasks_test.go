@@ -45,13 +45,21 @@ func TestTaskSchedState(t *testing.T) {
 var _ Task = &mockTask{} // quick compiler check mockTask fulfills the interface
 
 type mockTask struct {
-	pbTask *pb.Task
+	pbTask     *pb.Task
+	finalState pb.TaskState
 }
 
 // Not useful at the moment
-func (m *mockTask) Poll()                 {}
-func (m *mockTask) SetState(pb.TaskState) {}
-func (m *mockTask) GetChild(string) Task  { return nil }
+func (m *mockTask) Poll() {
+	if m.pbTask.State != pb.TaskState_RUNNING {
+		return
+	}
+	m.SetState(m.finalState)
+}
+func (m *mockTask) SetState(state pb.TaskState) {
+	m.Proto(func(pb *pb.Task) { pb.State = state })
+}
+func (m *mockTask) GetChild(string) Task { return nil }
 
 func (m *mockTask) Proto(updater func(*pb.Task)) *pb.Task {
 	if updater != nil {
@@ -64,7 +72,33 @@ func (m *mockTask) Proto(updater func(*pb.Task)) *pb.Task {
 func newMockTask(name string) *mockTask {
 	return &mockTask{
 		pbTask: &pb.Task{
-			Name: name,
+			Name:  name,
+			State: pb.TaskState_PENDING,
 		},
+		finalState: pb.TaskState_SUCCESS,
+	}
+}
+
+func newMockFailingTask(name string) *mockTask {
+	return &mockTask{
+		pbTask: &pb.Task{
+			Name:  name,
+			State: pb.TaskState_PENDING,
+		},
+		finalState: pb.TaskState_FAILED,
+	}
+}
+
+func compareTaskStates(t *testing.T, tasks []Task, states []pb.TaskState) {
+	if len(tasks) != len(states) {
+		t.Errorf("`tasks` and `states` should have the same length (%d != %d)", len(tasks), len(states))
+	}
+
+	for i, task := range tasks {
+		p := task.Proto(nil)
+		
+		if state := p.State; state != states[i] {
+			t.Errorf("Task `%s` expected to be in state %s, but was in %s instead.", p.Name, states[i], state)
+		}
 	}
 }
