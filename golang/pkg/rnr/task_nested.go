@@ -21,7 +21,7 @@ type NestedTask struct {
 }
 
 type NestedTaskOptions struct {
-	Poll        NestedTaskCallback // a callback called each time a Poll() on NestedTask is called.
+	CustomPoll  NestedTaskCallback // a callback called each time a Poll() on NestedTask is called.
 	Parallelism int                // the number of tasks to run in parallel; defaults to 1.
 	CompleteAll bool               // if `true`, the NestedTask will attempt to run all tasks before transitioning to either SUCCEEDED or FAILED state.
 }
@@ -61,8 +61,8 @@ func (nt *NestedTask) Poll() {
 		return
 	}
 
-	if nt.opts.Poll != nil {
-		nt.opts.Poll(nt, &nt.children)
+	if nt.opts.CustomPoll != nil {
+		nt.opts.CustomPoll(nt, &nt.children)
 	}
 
 	running := 0

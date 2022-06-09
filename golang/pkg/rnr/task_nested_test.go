@@ -119,7 +119,7 @@ func TestNestedTask_CallbackInvoked(t *testing.T) {
 	nt := NewNestedTask("nested task test", NestedTaskOptions{
 		Parallelism: 1,
 		CompleteAll: true,
-		Poll: func(nt *NestedTask, children *[]Task) {
+		CustomPoll: func(nt *NestedTask, children *[]Task) {
 			childName := fmt.Sprintf("callback-added child %d", childrenAdded)
 			nt.Add(newMockTask(childName))
 			childrenAdded += 1
