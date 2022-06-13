@@ -10,6 +10,8 @@ import (
 
 // Nested Task
 
+type NestedTaskCallback func(*NestedTask, *[]Task)
+
 type NestedTask struct {
 	pbMutex  sync.Mutex
 	pb       pb.Task
@@ -19,8 +21,9 @@ type NestedTask struct {
 }
 
 type NestedTaskOptions struct {
-	Parallelism int  // the number of tasks to run in parallel; defaults to 1
-	CompleteAll bool // if `true`, the NestedTask will attempt to run all tasks before transitioning to either SUCCEEDED or FAILED state.
+	CustomPoll  NestedTaskCallback // a callback called each time a Poll() on NestedTask is called.
+	Parallelism int                // the number of tasks to run in parallel; defaults to 1.
+	CompleteAll bool               // if `true`, the NestedTask will attempt to run all tasks before transitioning to either SUCCEEDED or FAILED state.
 }
 
 func NewNestedTask(name string, opts NestedTaskOptions) *NestedTask {
@@ -56,6 +59,10 @@ func (nt *NestedTask) Poll() {
 
 	if taskSchedState(nt.Proto(nil)) != RUNNING {
 		return
+	}
+
+	if nt.opts.CustomPoll != nil {
+		nt.opts.CustomPoll(nt, &nt.children)
 	}
 
 	running := 0

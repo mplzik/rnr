@@ -113,3 +113,38 @@ func TestNestedTask_CompleteAllSuccess(t *testing.T) {
 	nt.Poll()
 	compareTaskStates(t, tasks, []pb.TaskState{pb.TaskState_SUCCESS, pb.TaskState_SUCCESS, pb.TaskState_SUCCESS})
 }
+
+func TestNestedTask_CallbackInvoked(t *testing.T) {
+	childrenAdded := 0
+	nt := NewNestedTask("nested task test", NestedTaskOptions{
+		Parallelism: 1,
+		CompleteAll: true,
+		CustomPoll: func(nt *NestedTask, children *[]Task) {
+			childName := fmt.Sprintf("callback-added child %d", childrenAdded)
+			nt.Add(newMockTask(childName))
+			childrenAdded += 1
+		},
+	})
+
+	nt.SetState(pb.TaskState_PENDING)
+	nt.Poll()
+	if childrenAdded != 0 {
+		t.Errorf("callback shouldn't be invoked for non-RUNNING nested task!")
+	}
+
+	nt.SetState(pb.TaskState_RUNNING)
+	nt.Poll()
+	if childrenAdded != 1 {
+		t.Errorf("nested task callback was not invoked for running task!")
+	}
+	if len(nt.children) != 1 {
+		t.Errorf("expected 1 child, got %d", len(nt.children))
+	}
+
+	nt.SetState(pb.TaskState_RUNNING)
+	nt.Poll()
+	fmt.Println(nt.children[1].Proto(nil).Name)
+	if len(nt.children) != 2 {
+		t.Errorf("expected 2 children, got %d", len(nt.children))
+	}
+}
