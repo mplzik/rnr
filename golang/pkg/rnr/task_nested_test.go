@@ -148,3 +148,44 @@ func TestNestedTask_CallbackInvoked(t *testing.T) {
 		t.Errorf("expected 2 children, got %d", len(nt.children))
 	}
 }
+
+func TestNextedTask_PollAfterStateChange(t *testing.T) {
+	ct := newMockTask("child 1")
+	ct.finalState = pb.TaskState_RUNNING // This will stay in RUNNING state unless state is changed externally
+	nt := NewNestedTask("nested task test", NestedTaskOptions{Parallelism: 1, CompleteAll: true})
+
+	nt.Add(ct)
+	nt.SetState(pb.TaskState_RUNNING)
+
+	// Initially, a task in in PENDING state. Poll() from its parent should transfer it to RUNNING.
+	oldPollCount := ct.pollCount
+	nt.Poll()
+	if oldPollCount+1 != ct.pollCount {
+		t.Errorf("task was not polled when transitioning from PENDING to RUNNING state")
+	}
+
+	// A task in RUNNING state should get Poll()-ed each time.
+	oldPollCount = ct.pollCount
+	nt.Poll()
+	if oldPollCount+1 != ct.pollCount {
+		t.Errorf("task was not polled when in RUNNING state")
+	}
+
+	// A transition from a non-final to final state should trigger a Poll().
+	nt.SetState(pb.TaskState_RUNNING)
+	ct.SetState(pb.TaskState_SUCCESS)
+	oldPollCount = ct.pollCount
+	nt.Poll()
+	if oldPollCount+1 != ct.pollCount {
+		t.Errorf("task was not polled when transitioning from RUNNING to SUCCESS state")
+	}
+
+	// A transition from a final to final state should also trigger a Poll().
+	nt.SetState(pb.TaskState_RUNNING)
+	ct.SetState(pb.TaskState_SKIPPED)
+	oldPollCount = ct.pollCount
+	nt.Poll()
+	if oldPollCount+1 != ct.pollCount {
+		t.Errorf("task was not polled when transitioning from SUCCESS to SKIPPED state")
+	}
+}

@@ -47,10 +47,12 @@ var _ Task = &mockTask{} // quick compiler check mockTask fulfills the interface
 type mockTask struct {
 	pbTask     *pb.Task
 	finalState pb.TaskState
+	pollCount  int
 }
 
 // Not useful at the moment
 func (m *mockTask) Poll() {
+	m.pollCount += 1
 	if m.pbTask.State != pb.TaskState_RUNNING {
 		return
 	}
@@ -96,7 +98,7 @@ func compareTaskStates(t *testing.T, tasks []Task, states []pb.TaskState) {
 
 	for i, task := range tasks {
 		p := task.Proto(nil)
-		
+
 		if state := p.State; state != states[i] {
 			t.Errorf("Task `%s` expected to be in state %s, but was in %s instead.", p.Name, states[i], state)
 		}

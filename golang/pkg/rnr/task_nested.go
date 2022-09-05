@@ -2,6 +2,7 @@ package rnr
 
 import (
 	"fmt"
+	"log"
 	"sync"
 
 	"github.com/mplzik/rnr/golang/pkg/pb"
@@ -16,7 +17,7 @@ type NestedTask struct {
 	pbMutex  sync.Mutex
 	pb       pb.Task
 	children []Task
-	oldState map[*Task]pb.TaskState
+	oldState map[Task]pb.TaskState
 	opts     NestedTaskOptions
 }
 
@@ -29,7 +30,7 @@ type NestedTaskOptions struct {
 func NewNestedTask(name string, opts NestedTaskOptions) *NestedTask {
 	ret := &NestedTask{}
 	ret.pb.Name = name
-	ret.oldState = make(map[*Task]pb.TaskState)
+	ret.oldState = make(map[Task]pb.TaskState)
 	ret.opts = opts
 
 	// Sanitize opts
@@ -50,7 +51,7 @@ func (nt *NestedTask) Add(task Task) error {
 	}
 	nt.children = append(nt.children, task)
 	task.SetState(pb.TaskState_PENDING)
-	nt.oldState[&task] = pb.TaskState_PENDING
+	nt.oldState[task] = pb.TaskState_PENDING
 
 	return nil
 }
@@ -96,9 +97,11 @@ func (nt *NestedTask) Poll() {
 		pb := child.Proto(nil)
 		state := taskSchedState(pb)
 
+		log.Println("Evaluating ", pb.GetName(), pb.GetState(), "?=", nt.oldState[child])
+
 		// Poll a task iff it's running or it has its state changed recently
-		if state == RUNNING || pb.State != nt.oldState[&child] {
-			nt.oldState[&child] = pb.State
+		if state == RUNNING || pb.State != nt.oldState[child] {
+			nt.oldState[child] = pb.State
 			child.Poll()
 		}
 
