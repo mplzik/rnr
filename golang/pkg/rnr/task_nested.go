@@ -2,7 +2,6 @@ package rnr
 
 import (
 	"fmt"
-	"log"
 	"sync"
 
 	"github.com/mplzik/rnr/golang/pkg/pb"
@@ -96,8 +95,6 @@ func (nt *NestedTask) Poll() {
 	for _, child := range nt.children {
 		pb := child.Proto(nil)
 		state := taskSchedState(pb)
-
-		log.Println("Evaluating ", pb.GetName(), pb.GetState(), "?=", nt.oldState[child])
 
 		// Poll a task iff it's running or it has its state changed recently
 		if state == RUNNING || pb.State != nt.oldState[child] {
