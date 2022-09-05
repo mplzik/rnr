@@ -18,6 +18,7 @@ type CallbackFunc func(context.Context, *CallbackTask) (bool, error)
 type CallbackTask struct {
 	pbMutex  sync.Mutex
 	pb       pb.Task
+	oldState pb.TaskState
 	callback CallbackFunc
 }
 
@@ -27,16 +28,18 @@ func NewCallbackTask(name string, callback CallbackFunc) *CallbackTask {
 
 	ret.pb.Name = name
 	ret.callback = callback
+	ret.oldState = pb.TaskState_UNKNOWN
 
 	return ret
 }
 
 // Poll synchronously calls the callback
 func (ct *CallbackTask) Poll() {
-	if taskSchedState(&ct.pb) != RUNNING {
+	if (taskSchedState(&ct.pb) != RUNNING) && (ct.oldState == ct.pb.GetState()) {
 		return
 	}
 
+	ct.oldState = ct.pb.GetState()
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
 
