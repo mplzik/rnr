@@ -73,9 +73,6 @@ func (ct *CallbackTask) Proto(updater func(*pb.Task)) *pb.Task {
 
 func (ct *CallbackTask) SetState(state pb.TaskState) {
 	ct.Proto(func(pb *pb.Task) { pb.State = state })
-
-	// An additional call to let the task know about state change
-	go ct.Poll()
 }
 
 func (ct *CallbackTask) GetChild(name string) Task {
