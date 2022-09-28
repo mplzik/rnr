@@ -2,6 +2,7 @@ package rnr
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"sort"
@@ -16,12 +17,15 @@ import (
 // Job polling interval
 var pollInterval = 5 * time.Second
 
+var ErrJobNotRunning = errors.New("job is not running")
+
 type Job struct {
 	pbMutex  sync.Mutex
 	job      pb.Job
 	root     Task
 	oldProto *pb.Task
 	err      error
+	done     chan struct{}
 }
 
 func NewJob(root Task) *Job {
@@ -155,11 +159,10 @@ func (j *Job) TaskRequest(r *pb.TaskRequest) error {
 func (j *Job) Err() error { return j.err }
 
 // Start is a shortcut for setting the root task to "running" state.
-func (j *Job) Start(ctx context.Context) func() {
+func (j *Job) Start(ctx context.Context) {
 	j.root.SetState(pb.TaskState_RUNNING)
 
-	stopCh := make(chan struct{})
-	stopFn := func() { close(stopCh) }
+	j.done = make(chan struct{})
 
 	go func() {
 		ticker := time.NewTicker(pollInterval)
@@ -167,7 +170,7 @@ func (j *Job) Start(ctx context.Context) func() {
 
 		for {
 			select {
-			case <-stopCh:
+			case <-j.done:
 				// job was stopped by calling stopFn
 				return
 
@@ -181,6 +184,14 @@ func (j *Job) Start(ctx context.Context) func() {
 			}
 		}
 	}()
+}
 
-	return stopFn
+// Stop stops the running job
+func (j *Job) Stop() error {
+	if j.done == nil {
+		return ErrJobNotRunning
+	}
+	close(j.done)
+	j.done = nil
+	return nil
 }
