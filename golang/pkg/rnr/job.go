@@ -163,6 +163,7 @@ func (j *Job) Start(ctx context.Context) func() {
 
 	go func() {
 		ticker := time.NewTicker(pollInterval)
+		defer ticker.Stop()
 
 		for {
 			select {
