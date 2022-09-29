@@ -9,6 +9,7 @@ import (
 )
 
 // Shell Task
+var _ Task = &ShellTask{}
 
 type ShellTask struct {
 	pbMutex  sync.Mutex

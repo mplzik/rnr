@@ -12,6 +12,7 @@ import (
 type CallbackFunc func(context.Context, *CallbackTask) (bool, error)
 
 // CallbackTask
+var _ Task = &CallbackTask{}
 
 // CallbackTask implements a task with synchronously called callback.
 // It returns a boolean indicating whether to transition into a final state and an error in case an error has happened. These values are used to best-effort-update the task's protobuf. If (false, nil) is supplied, the task state will be left untouched

@@ -9,6 +9,7 @@ import (
 )
 
 // Nested Task
+var _ Task = &NestedTask{}
 
 type NestedTaskCallback func(*NestedTask, *[]Task)
 
