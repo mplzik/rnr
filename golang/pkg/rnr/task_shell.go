@@ -1,6 +1,7 @@
 package rnr
 
 import (
+	"context"
 	"os/exec"
 	"sync"
 
@@ -35,13 +36,16 @@ func NewShellTask(name, cmd string, args ...string) *ShellTask {
 	return ret
 }
 
-func (ct *ShellTask) Poll() {
+func (ct *ShellTask) Poll(ctx context.Context) {
 	if ct.cmd.Process == nil {
 		// Not yet started, let's launch it first
 		go func() { ct.err <- ct.cmd.Run() }()
 		ct.pb.Message = "Started"
 	}
 
+	// TODO here we should probably do something when the context is
+	// cancelled, by killing the process. In that case we need to
+	// define how are we going to handle the error.
 	select {
 	default:
 		// still running

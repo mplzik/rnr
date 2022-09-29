@@ -1,6 +1,7 @@
 package rnr
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -51,7 +52,7 @@ type mockTask struct {
 }
 
 // Not useful at the moment
-func (m *mockTask) Poll() {
+func (m *mockTask) Poll(ctx context.Context) {
 	m.pollCount += 1
 	if m.pbTask.State != pb.TaskState_RUNNING {
 		return

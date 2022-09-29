@@ -1,6 +1,7 @@
 package rnr
 
 import (
+	"context"
 	"fmt"
 	"sync"
 
@@ -56,7 +57,7 @@ func (nt *NestedTask) Add(task Task) error {
 	return nil
 }
 
-func (nt *NestedTask) Poll() {
+func (nt *NestedTask) Poll(ctx context.Context) {
 
 	if taskSchedState(nt.Proto(nil)) != RUNNING {
 		return
@@ -100,7 +101,7 @@ func (nt *NestedTask) Poll() {
 		// Poll a task iff it's running or it has its state changed recently
 		if state == RUNNING || pb.State != nt.oldState[child] {
 			nt.oldState[child] = pb.State
-			child.Poll()
+			child.Poll(ctx)
 		}
 
 	}

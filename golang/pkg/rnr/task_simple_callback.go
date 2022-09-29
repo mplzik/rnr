@@ -35,7 +35,7 @@ func NewCallbackTask(name string, callback CallbackFunc) *CallbackTask {
 }
 
 // Poll synchronously calls the callback
-func (ct *CallbackTask) Poll() {
+func (ct *CallbackTask) Poll(ctx context.Context) {
 	if (taskSchedState(&ct.pb) != RUNNING) && (ct.oldState == ct.pb.GetState()) {
 		return
 	}
