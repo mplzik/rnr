@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/mplzik/rnr/golang/pkg/pb"
 	"github.com/mplzik/rnr/golang/pkg/rnr"
@@ -36,11 +37,11 @@ func TestJob(t *testing.T) {
 
 	var err error
 
-	if err = j.Start(ctx); err != nil {
+	if err = j.Start(ctx, 5*time.Millisecond); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	if err = j.Start(ctx); !errors.Is(err, rnr.ErrJobAlreadyStarted) {
+	if err = j.Start(ctx, time.Millisecond); !errors.Is(err, rnr.ErrJobAlreadyStarted) {
 		t.Fatalf("expecting ErrJobAlreadyStarted, got %v", err)
 	}
 

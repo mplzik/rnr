@@ -14,9 +14,6 @@ import (
 	proto "google.golang.org/protobuf/proto"
 )
 
-// Job polling interval
-var pollInterval = 5 * time.Second
-
 var (
 	ErrJobNotRunning     = errors.New("job is not running")
 	ErrJobAlreadyStarted = errors.New("job was already started")
@@ -162,7 +159,7 @@ func (j *Job) TaskRequest(r *pb.TaskRequest) error {
 func (j *Job) Err() error { return j.err }
 
 // Start is a shortcut for setting the root task to "running" state.
-func (j *Job) Start(ctx context.Context) error {
+func (j *Job) Start(ctx context.Context, pollInterval time.Duration) error {
 	if j.done != nil {
 		return ErrJobAlreadyStarted
 	}
