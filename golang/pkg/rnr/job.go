@@ -195,3 +195,6 @@ func (j *Job) Stop() error {
 	j.done = nil
 	return nil
 }
+
+// Wait waits for the Job to finish.
+func (j *Job) Wait() <-chan struct{} { return j.done }
