@@ -17,7 +17,10 @@ import (
 // Job polling interval
 var pollInterval = 5 * time.Second
 
-var ErrJobNotRunning = errors.New("job is not running")
+var (
+	ErrJobNotRunning     = errors.New("job is not running")
+	ErrJobAlreadyStarted = errors.New("job was already started")
+)
 
 type Job struct {
 	pbMutex  sync.Mutex
@@ -159,7 +162,11 @@ func (j *Job) TaskRequest(r *pb.TaskRequest) error {
 func (j *Job) Err() error { return j.err }
 
 // Start is a shortcut for setting the root task to "running" state.
-func (j *Job) Start(ctx context.Context) {
+func (j *Job) Start(ctx context.Context) error {
+	if j.done != nil {
+		return ErrJobAlreadyStarted
+	}
+
 	j.root.SetState(pb.TaskState_RUNNING)
 
 	j.done = make(chan struct{})
@@ -184,6 +191,8 @@ func (j *Job) Start(ctx context.Context) {
 			}
 		}
 	}()
+
+	return nil
 }
 
 // Stop stops the running job
