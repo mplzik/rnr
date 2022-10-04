@@ -1,6 +1,8 @@
 package rnr
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"log"
 	"sort"
@@ -12,40 +14,29 @@ import (
 	proto "google.golang.org/protobuf/proto"
 )
 
+var (
+	ErrJobNotRunning     = errors.New("job is not running")
+	ErrJobAlreadyStarted = errors.New("job was already started")
+)
+
 type Job struct {
 	pbMutex  sync.Mutex
 	job      pb.Job
 	root     Task
-	stop     chan struct{}
 	oldProto *pb.Task
+	err      error
+	done     chan struct{}
 }
 
 func NewJob(root Task) *Job {
-	ret := &Job{
+	return &Job{
 		job: pb.Job{
 			Version: 1,
 			Uuid:    "1235abcdef",
 			Root:    nil,
 		},
 		root: root,
-		stop: make(chan struct{}),
 	}
-
-	go func() {
-		ticker := time.NewTicker(5 * time.Second)
-		for exit := false; !exit; {
-			select {
-			case _, ok := <-ret.stop:
-				if !ok {
-					exit = true
-				}
-			case <-ticker.C:
-				ret.Poll()
-			}
-		}
-	}()
-
-	return ret
 }
 
 func (j *Job) Proto(updater func(*pb.Job)) *pb.Job {
@@ -128,7 +119,7 @@ func taskDiff(path []string, old *pb.Task, new *pb.Task) []string {
 	return ret
 }
 
-func (j *Job) Poll() {
+func (j *Job) Poll(ctx context.Context) {
 	j.root.Poll()
 
 	newProto := j.root.Proto(nil)
@@ -164,7 +155,52 @@ func (j *Job) TaskRequest(r *pb.TaskRequest) error {
 	return nil
 }
 
+// Err returns whatever error might have happened after Start.
+func (j *Job) Err() error { return j.err }
+
 // Start is a shortcut for setting the root task to "running" state.
-func (j *Job) Start() {
+func (j *Job) Start(ctx context.Context, pollInterval time.Duration) error {
+	if j.done != nil {
+		return ErrJobAlreadyStarted
+	}
+
 	j.root.SetState(pb.TaskState_RUNNING)
+
+	j.done = make(chan struct{})
+
+	go func() {
+		ticker := time.NewTicker(pollInterval)
+		defer ticker.Stop()
+
+		for {
+			select {
+			case <-j.done:
+				// job was stopped by calling stopFn
+				return
+
+			case <-ctx.Done():
+				// job stopp due to context being done (e.g. cancelled or timed out)
+				j.err = ctx.Err()
+				return
+
+			case <-ticker.C:
+				j.Poll(ctx)
+			}
+		}
+	}()
+
+	return nil
 }
+
+// Stop stops the running job
+func (j *Job) Stop() error {
+	if j.done == nil {
+		return ErrJobNotRunning
+	}
+	close(j.done)
+	j.done = nil
+	return nil
+}
+
+// Wait waits for the Job to finish.
+func (j *Job) Wait() <-chan struct{} { return j.done }
