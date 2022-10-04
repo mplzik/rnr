@@ -2,6 +2,7 @@ package rnr
 
 import (
 	"context"
+	"fmt"
 	"os/exec"
 	"sync"
 
@@ -39,16 +40,37 @@ func NewShellTask(name, cmd string, args ...string) *ShellTask {
 func (ct *ShellTask) Poll(ctx context.Context) {
 	if ct.cmd.Process == nil {
 		// Not yet started, let's launch it first
-		go func() { ct.err <- ct.cmd.Run() }()
+		if err := ct.cmd.Start(); err != nil {
+			ct.pb.Message = fmt.Sprintf("failed to start: %v", err)
+			ct.pb.State = pb.TaskState_FAILED
+			return
+		}
+
+		go func() { ct.err <- ct.cmd.Wait() }()
+
+		ct.pb.State = pb.TaskState_RUNNING
 		ct.pb.Message = "Started"
+		return
 	}
 
-	// TODO here we should probably do something when the context is
-	// cancelled, by killing the process. In that case we need to
-	// define how are we going to handle the error.
+	if ct.pb.State != pb.TaskState_RUNNING {
+		return
+	}
+
 	select {
 	default:
 		// still running
+	case <-ctx.Done():
+		if ct.cmd.ProcessState != nil {
+			// process was already killed/finished
+			return
+		}
+
+		if err := ct.cmd.Process.Kill(); err != nil {
+			ct.pb.Message = fmt.Sprintf("cannot kill process: %v", err)
+			ct.pb.State = pb.TaskState_FAILED
+		}
+
 	case err := <-ct.err:
 		ct.pb.Message = "Exited"
 		// The process has finished
