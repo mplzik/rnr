@@ -94,6 +94,24 @@ func TestCallbackTask_Poll(t *testing.T) {
 			t.Errorf("expectiing message to be %q, got %q", exp, pbt.Message)
 		}
 	})
+
+	t.Run("context", func(t *testing.T) {
+		type keyType int
+		key := keyType(1024)
+		val := 42
+		ctx := context.WithValue(context.Background(), key, val)
+
+		fn := func(ctx context.Context, ct *CallbackTask) (bool, error) {
+			if got := ctx.Value(key); got != val {
+				t.Fatalf("expecting context key %T(%#[1]v) with value %v, got %v", key, val, got)
+			}
+			return true, nil
+		}
+
+		ct := NewCallbackTask("foo", fn)
+		ct.SetState(pb.TaskState_RUNNING)
+		ct.Poll(ctx)
+	})
 }
 
 func TestCallbackTask_GetChild(t *testing.T) {

@@ -40,8 +40,10 @@ func (ct *CallbackTask) Poll(ctx context.Context) {
 		return
 	}
 
+	// TODO should we call the callback if the context was done?
+
 	ct.oldState = ct.pb.GetState()
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
 
 	ret, err := ct.callback(ctx, ct)
