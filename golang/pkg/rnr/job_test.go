@@ -13,10 +13,10 @@ import (
 var _ rnr.Task = &task{}
 
 type task struct {
-	pollFn func()
+	pollFn func(context.Context)
 }
 
-func (t *task) Poll()                         { t.pollFn() }
+func (t *task) Poll(ctx context.Context)      { t.pollFn(ctx) }
 func (t *task) SetState(pb.TaskState)         {}
 func (t *task) Proto(func(*pb.Task)) *pb.Task { return nil }
 func (*task) GetChild(string) rnr.Task        { return nil }
@@ -25,7 +25,7 @@ func TestJob(t *testing.T) {
 	var pollCount int
 
 	task := &task{
-		pollFn: func() {
+		pollFn: func(context.Context) {
 			pollCount++
 			t.Logf("poll %02d", pollCount)
 		},

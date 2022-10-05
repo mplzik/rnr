@@ -120,7 +120,7 @@ func taskDiff(path []string, old *pb.Task, new *pb.Task) []string {
 }
 
 func (j *Job) Poll(ctx context.Context) {
-	j.root.Poll()
+	j.root.Poll(ctx)
 
 	newProto := j.root.Proto(nil)
 	// Calculate diff and post state changes

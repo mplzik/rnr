@@ -12,6 +12,7 @@ import (
 type CallbackFunc func(context.Context, *CallbackTask) (bool, error)
 
 // CallbackTask
+var _ Task = &CallbackTask{}
 
 // CallbackTask implements a task with synchronously called callback.
 // It returns a boolean indicating whether to transition into a final state and an error in case an error has happened. These values are used to best-effort-update the task's protobuf. If (false, nil) is supplied, the task state will be left untouched
@@ -34,13 +35,15 @@ func NewCallbackTask(name string, callback CallbackFunc) *CallbackTask {
 }
 
 // Poll synchronously calls the callback
-func (ct *CallbackTask) Poll() {
+func (ct *CallbackTask) Poll(ctx context.Context) {
 	if (taskSchedState(&ct.pb) != RUNNING) && (ct.oldState == ct.pb.GetState()) {
 		return
 	}
 
+	// TODO should we call the callback if the context was done?
+
 	ct.oldState = ct.pb.GetState()
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
 
 	ret, err := ct.callback(ctx, ct)

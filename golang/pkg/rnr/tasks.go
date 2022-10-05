@@ -1,6 +1,8 @@
 package rnr
 
 import (
+	"context"
+
 	"github.com/mplzik/rnr/golang/pkg/pb"
 )
 
@@ -30,7 +32,7 @@ func taskSchedState(pbt *pb.Task) TaskState {
 
 // Task is a generic interface for pollable tasks
 type Task interface {
-	Poll()
+	Poll(ctx context.Context)
 	Proto(updater func(*pb.Task)) *pb.Task
 	SetState(pb.TaskState)
 	GetChild(name string) Task
