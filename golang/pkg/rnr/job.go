@@ -112,6 +112,7 @@ func taskDiff(path []string, old *pb.Task, new *pb.Task) []string {
 			taskName = oldChild.Name
 		} else {
 			// This shouldn't happen, since `children` is constructed from old and new children
+			panic("both old and new children are nil")
 		}
 		ret = append(ret, taskDiff(append(path, taskName), oldChild, newChild)...)
 	}
