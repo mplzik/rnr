@@ -96,15 +96,15 @@ func taskDiff(path []string, old *pb.Task, new *pb.Task) []string {
 	children := make([]string, 0, len(childrenMap))
 
 	// `children` is now a list of unique children names
-	for key, _ := range childrenMap {
+	for key := range childrenMap {
 		children = append(children, key)
 	}
 
 	sort.Strings(children)
 
 	for _, child := range children {
-		oldChild, _ := oldChildren[child]
-		newChild, _ := newChildren[child]
+		oldChild := oldChildren[child]
+		newChild := newChildren[child]
 		taskName := "(unknown)"
 		if newChild != nil {
 			taskName = newChild.Name
