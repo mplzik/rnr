@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/mplzik/rnr/golang/pkg/pb"
-	proto "google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 )
 
 var (

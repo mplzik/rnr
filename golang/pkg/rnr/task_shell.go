@@ -4,8 +4,8 @@ import (
 	"os/exec"
 	"sync"
 
-	"github.com/golang/protobuf/proto"
 	"github.com/mplzik/rnr/golang/pkg/pb"
+	"google.golang.org/protobuf/proto"
 )
 
 // Shell Task
