@@ -16,7 +16,6 @@ type NestedTask struct {
 	pbMutex  sync.Mutex
 	pb       pb.Task
 	children []Task
-	oldState map[Task]pb.TaskState
 	opts     NestedTaskOptions
 }
 
@@ -29,7 +28,6 @@ type NestedTaskOptions struct {
 func NewNestedTask(name string, opts NestedTaskOptions) *NestedTask {
 	ret := &NestedTask{}
 	ret.pb.Name = name
-	ret.oldState = make(map[Task]pb.TaskState)
 	ret.opts = opts
 
 	// Sanitize opts
@@ -50,7 +48,6 @@ func (nt *NestedTask) Add(task Task) error {
 	}
 	nt.children = append(nt.children, task)
 	task.SetState(pb.TaskState_PENDING)
-	nt.oldState[task] = pb.TaskState_PENDING
 
 	return nil
 }
@@ -91,17 +88,9 @@ func (nt *NestedTask) Poll() {
 		running++
 	}
 
-	// Poll the running or changed tasks
+	// Poll the child tasks
 	for _, child := range nt.children {
-		pb := child.Proto(nil)
-		state := taskSchedState(pb)
-
-		// Poll a task iff it's running or it has its state changed recently
-		if state == RUNNING || pb.State != nt.oldState[child] {
-			nt.oldState[child] = pb.State
-			child.Poll()
-		}
-
+		child.Poll()
 	}
 
 	successCount := 0
