@@ -53,12 +53,12 @@ func TestCallbackTask_Poll(t *testing.T) {
 		}
 	}
 
-	{ // shouldn't call the callback
+	{ // should call the callback
 		oldCount := callsCount
 		ct.Poll()
 
-		if callsCount != oldCount {
-			t.Errorf("expecting callback to be invoked %d times, got %d invokations", oldCount, callsCount)
+		if callsCount != oldCount+1 {
+			t.Errorf("expecting callback to be invoked %d times, got %d invocations", oldCount, callsCount)
 		}
 	}
 
