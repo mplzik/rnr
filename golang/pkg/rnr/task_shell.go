@@ -4,19 +4,18 @@ import (
 	"os/exec"
 	"sync"
 
-	"github.com/golang/protobuf/proto"
 	"github.com/mplzik/rnr/golang/pkg/pb"
+	"google.golang.org/protobuf/proto"
 )
 
 // Shell Task
 
 type ShellTask struct {
-	pbMutex  sync.Mutex
-	pb       pb.Task
-	children []Task
-	cmdName  string
-	cmdArgs  []string
-	err      chan error
+	pbMutex sync.Mutex
+	pb      pb.Task
+	cmdName string
+	cmdArgs []string
+	err     chan error
 
 	cmd *exec.Cmd
 }

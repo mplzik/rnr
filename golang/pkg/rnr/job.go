@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/mplzik/rnr/golang/pkg/pb"
-	proto "google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 )
 
 var (
@@ -96,15 +96,15 @@ func taskDiff(path []string, old *pb.Task, new *pb.Task) []string {
 	children := make([]string, 0, len(childrenMap))
 
 	// `children` is now a list of unique children names
-	for key, _ := range childrenMap {
+	for key := range childrenMap {
 		children = append(children, key)
 	}
 
 	sort.Strings(children)
 
 	for _, child := range children {
-		oldChild, _ := oldChildren[child]
-		newChild, _ := newChildren[child]
+		oldChild := oldChildren[child]
+		newChild := newChildren[child]
 		taskName := "(unknown)"
 		if newChild != nil {
 			taskName = newChild.Name
@@ -112,6 +112,7 @@ func taskDiff(path []string, old *pb.Task, new *pb.Task) []string {
 			taskName = oldChild.Name
 		} else {
 			// This shouldn't happen, since `children` is constructed from old and new children
+			panic("both old and new children are nil")
 		}
 		ret = append(ret, taskDiff(append(path, taskName), oldChild, newChild)...)
 	}

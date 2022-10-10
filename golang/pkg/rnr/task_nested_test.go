@@ -36,7 +36,7 @@ func BenchmarkNestedTask_Add(b *testing.B) {
 			for i := 0; i < b.N; i++ {
 				nt := NewNestedTask(name, NestedTaskOptions{})
 				for _, t := range tasks {
-					nt.Add(t)
+					nt.Add(t) //nolint:errcheck
 				}
 			}
 		})
@@ -48,8 +48,8 @@ func TestNestedTask_GetChild(t *testing.T) {
 	ct1 := newMockTask("child 1")
 	ct2 := newMockTask("child 2")
 
-	nt.Add(ct1)
-	nt.Add(ct2)
+	nt.Add(ct1) //nolint:errcheck
+	nt.Add(ct2) //nolint:errcheck
 
 	if ct := nt.GetChild("child 1"); ct != ct1 {
 		t.Errorf("expecting GetChild to return %v, got %v", ct1, ct)
@@ -70,8 +70,8 @@ func TestNestedTask_FailFirst(t *testing.T) {
 
 	tasks := []Task{ct1, ct2, nt}
 
-	nt.Add(ct1)
-	nt.Add(ct2)
+	nt.Add(ct1) //nolint:errcheck
+	nt.Add(ct2) //nolint:errcheck
 	nt.SetState(pb.TaskState_RUNNING)
 
 	nt.Poll()
@@ -85,8 +85,8 @@ func TestNestedTask_CompleteAllFail(t *testing.T) {
 
 	tasks := []Task{ct1, ct2, nt}
 
-	nt.Add(ct1)
-	nt.Add(ct2)
+	nt.Add(ct1) //nolint:errcheck
+	nt.Add(ct2) //nolint:errcheck
 	nt.SetState(pb.TaskState_RUNNING)
 
 	nt.Poll()
@@ -103,8 +103,8 @@ func TestNestedTask_CompleteAllSuccess(t *testing.T) {
 
 	tasks := []Task{ct1, ct2, nt}
 
-	nt.Add(ct1)
-	nt.Add(ct2)
+	nt.Add(ct1) //nolint:errcheck
+	nt.Add(ct2) //nolint:errcheck
 	nt.SetState(pb.TaskState_RUNNING)
 
 	nt.Poll()
@@ -121,7 +121,7 @@ func TestNestedTask_CallbackInvoked(t *testing.T) {
 		CompleteAll: true,
 		CustomPoll: func(nt *NestedTask, children *[]Task) {
 			childName := fmt.Sprintf("callback-added child %d", childrenAdded)
-			nt.Add(newMockTask(childName))
+			nt.Add(newMockTask(childName)) //nolint:errcheck
 			childrenAdded += 1
 		},
 	})
@@ -154,7 +154,7 @@ func TestNextedTask_PollAfterStateChange(t *testing.T) {
 	ct.finalState = pb.TaskState_RUNNING // This will stay in RUNNING state unless state is changed externally
 	nt := NewNestedTask("nested task test", NestedTaskOptions{Parallelism: 1, CompleteAll: true})
 
-	nt.Add(ct)
+	nt.Add(ct) //nolint:errcheck
 	nt.SetState(pb.TaskState_RUNNING)
 
 	// Initially, a task in in PENDING state. Poll() from its parent should transfer it to RUNNING.
