@@ -1,6 +1,7 @@
 package rnr
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -41,57 +42,23 @@ func TestTaskSchedState(t *testing.T) {
 	}
 }
 
-// Mock task useful for testing
-var _ Task = &mockTask{} // quick compiler check mockTask fulfills the interface
+func newMockTask(name string, finalState pb.TaskState, pollCount *int) *Task {
+	return NewTask(name, false, func(ctx context.Context, task *Task) {
+		if pollCount != nil {
+			*pollCount++
+		}
 
-type mockTask struct {
-	pbTask     *pb.Task
-	finalState pb.TaskState
-	pollCount  int
+		task.Proto(func(state *pb.Task) *pb.Task {
+			if state.State == pb.TaskState_RUNNING {
+				state.State = finalState
+			}
+
+			return state
+		})
+	})
 }
 
-// Not useful at the moment
-func (m *mockTask) Poll() {
-	m.pollCount += 1
-	if m.pbTask.State != pb.TaskState_RUNNING {
-		return
-	}
-	m.SetState(m.finalState)
-}
-func (m *mockTask) SetState(state pb.TaskState) {
-	m.Proto(func(pb *pb.Task) { pb.State = state })
-}
-func (m *mockTask) GetChild(string) Task { return nil }
-
-func (m *mockTask) Proto(updater func(*pb.Task)) *pb.Task {
-	if updater != nil {
-		updater(m.pbTask)
-	}
-
-	return m.pbTask
-}
-
-func newMockTask(name string) *mockTask {
-	return &mockTask{
-		pbTask: &pb.Task{
-			Name:  name,
-			State: pb.TaskState_PENDING,
-		},
-		finalState: pb.TaskState_SUCCESS,
-	}
-}
-
-func newMockFailingTask(name string) *mockTask {
-	return &mockTask{
-		pbTask: &pb.Task{
-			Name:  name,
-			State: pb.TaskState_PENDING,
-		},
-		finalState: pb.TaskState_FAILED,
-	}
-}
-
-func compareTaskStates(t *testing.T, tasks []Task, states []pb.TaskState) {
+func compareTaskStates(t *testing.T, tasks []*Task, states []pb.TaskState) {
 	if len(tasks) != len(states) {
 		t.Errorf("`tasks` and `states` should have the same length (%d != %d)", len(tasks), len(states))
 	}
