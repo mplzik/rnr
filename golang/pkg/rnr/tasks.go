@@ -74,10 +74,9 @@ func (task *Task) Proto(updater StateUpdateCallback) *pb.Task {
 
 	// Rebuild the children protobufs.
 	// This is terribly inefficient, but probably the easiest thing to do.
-	task.pb.Children = []*pb.Task{}
-	for _, c := range task.children {
-		p := c.Proto(nil)
-		task.pb.Children = append(task.pb.Children, p)
+	task.pb.Children = make([]*pb.Task, len(task.children))
+	for i, c := range task.children {
+		task.pb.Children[i] = c.Proto(nil)
 	}
 
 	return task.pb
