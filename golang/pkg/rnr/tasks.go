@@ -57,8 +57,8 @@ func NewTask(name string, children bool, cb TaskCallback) *Task {
 	}
 }
 
-func (task *Task) Poll() {
-	task.cb(context.TODO(), task)
+func (task *Task) Poll(ctx context.Context) {
+	task.cb(ctx, task)
 }
 
 func (task *Task) Proto(updater StateUpdateCallback) *pb.Task {
