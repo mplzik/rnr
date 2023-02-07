@@ -2,6 +2,7 @@ package rnr
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 
@@ -17,6 +18,8 @@ const (
 	RUNNING
 	DONE
 )
+
+var ErrNoChildrenAllowed = errors.New("no children allowed for this kind of task")
 
 func taskSchedState(pbt *pb.Task) TaskState {
 	switch pbt.State {
@@ -102,6 +105,10 @@ func (task *Task) GetChild(name string) *Task {
 }
 
 func (nt *Task) Add(task *Task) error {
+	if nt.has_children {
+		return ErrNoChildrenAllowed
+	}
+
 	newName := task.Proto(nil).Name
 
 	for _, child := range nt.children {
