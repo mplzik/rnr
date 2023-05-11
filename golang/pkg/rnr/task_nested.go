@@ -1,23 +1,15 @@
 package rnr
 
 import (
+	"context"
 	"fmt"
-	"sync"
 
 	"github.com/mplzik/rnr/golang/pkg/pb"
-	"google.golang.org/protobuf/proto"
 )
 
 // Nested Task
 
-type NestedTaskCallback func(*NestedTask, *[]Task)
-
-type NestedTask struct {
-	pbMutex  sync.Mutex
-	pb       pb.Task
-	children []Task
-	opts     NestedTaskOptions
-}
+type NestedTaskCallback func(*Task, []*Task)
 
 type NestedTaskOptions struct {
 	CustomPoll  NestedTaskCallback // a callback called each time a Poll() on NestedTask is called.
@@ -25,135 +17,91 @@ type NestedTaskOptions struct {
 	CompleteAll bool               // if `true`, the NestedTask will attempt to run all tasks before transitioning to either SUCCEEDED or FAILED state.
 }
 
-func NewNestedTask(name string, opts NestedTaskOptions) *NestedTask {
-	ret := &NestedTask{}
-	ret.pb.Name = name
-	ret.opts = opts
+func NewNestedTask(name string, opts NestedTaskOptions) *Task {
 
 	// Sanitize opts
-	if ret.opts.Parallelism < 1 {
-		ret.opts.Parallelism = 1
+	if opts.Parallelism < 1 {
+		opts.Parallelism = 1
 	}
 
-	return ret
-}
+	return NewTask(name, true, func(ctx context.Context, task *Task) {
+		// Begin insert
 
-func (nt *NestedTask) Add(task Task) error {
-	newName := task.Proto(nil).GetName()
-
-	for _, child := range nt.children {
-		if child.Proto(nil).Name == newName {
-			return fmt.Errorf("task named '%s' already exists", child.Proto(nil).Name)
+		if taskSchedState(task.Proto(nil)) != RUNNING {
+			return
 		}
-	}
-	nt.children = append(nt.children, task)
-	task.SetState(pb.TaskState_PENDING)
 
-	return nil
-}
+		if opts.CustomPoll != nil {
+			opts.CustomPoll(task, task.children)
+		}
 
-func (nt *NestedTask) Poll() {
+		running := 0
+		pending := []*Task{}
 
-	if taskSchedState(nt.Proto(nil)) != RUNNING {
-		return
-	}
+		// Perform scheduling
+		for i := range task.children {
+			child := task.children[i]
+			state := taskSchedState(child.Proto(nil))
 
-	if nt.opts.CustomPoll != nil {
-		nt.opts.CustomPoll(nt, &nt.children)
-	}
+			// Count running tasks
+			if state == RUNNING {
+				running++
+			}
 
-	running := 0
-	pending := []Task{}
+			if state == PENDING {
+				pending = append(pending, child)
+			}
+		}
 
-	// Perform scheduling
-	for i := range nt.children {
-		child := nt.children[i]
-		state := taskSchedState(child.Proto(nil))
-
-		// Count running tasks
-		if state == RUNNING {
+		// Add more running tasks, if applicable. Don't try to stop tasks -- these have been likely invoked manually.
+		for (running < opts.Parallelism) && len(pending) > 0 {
+			// TODO: we shouldn't be mutating the PB this way; let's add a mutating function to the task interface.
+			pending[0].SetState(pb.TaskState_RUNNING)
+			pending = pending[1:]
 			running++
 		}
 
-		if state == PENDING {
-			pending = append(pending, child)
-		}
-	}
-
-	// Add more running tasks, if applicable. Don't try to stop tasks -- these have been likely invoked manually.
-	for (running < nt.opts.Parallelism) && len(pending) > 0 {
-		// TODO: we shouldn't be mutating the PB this way; let's add a mutating function to the task interface.
-		pending[0].SetState(pb.TaskState_RUNNING)
-		pending = pending[1:]
-		running++
-	}
-
-	// Poll the child tasks
-	for _, child := range nt.children {
-		child.Poll()
-	}
-
-	successCount := 0
-	failedCount := 0
-	doneCount := 0
-	for _, child := range nt.children {
-		cpb := child.Proto(nil)
-		if cpb.State == pb.TaskState_SUCCESS {
-			successCount++
-		} else if cpb.State == pb.TaskState_FAILED {
-			failedCount++
+		// Poll the child tasks
+		for _, child := range task.children {
+			child.Poll()
 		}
 
-		if taskSchedState(cpb) == DONE {
-			doneCount++
+		successCount := 0
+		failedCount := 0
+		doneCount := 0
+		for _, child := range task.children {
+			cpb := child.Proto(nil)
+			if cpb.State == pb.TaskState_SUCCESS {
+				successCount++
+			} else if cpb.State == pb.TaskState_FAILED {
+				failedCount++
+			}
+
+			if taskSchedState(cpb) == DONE {
+				doneCount++
+			}
 		}
-	}
 
-	nt.Proto(func(pb *pb.Task) { pb.Message = fmt.Sprintf("%d/%d", successCount, len(nt.children)) })
+		task.Proto(func(pb *pb.Task) *pb.Task {
+			pb.Message = fmt.Sprintf("%d/%d", successCount, len(task.children))
+			return pb
+		})
 
-	// Handle termination
-	if !nt.opts.CompleteAll && failedCount > 0 {
-		// Fail everything on a first failed task.
-		nt.SetState(pb.TaskState_FAILED)
-		return
-	}
-
-	if doneCount == len(nt.children) {
-		if successCount == len(nt.children) {
-			nt.SetState(pb.TaskState_SUCCESS)
-		} else {
-			nt.SetState(pb.TaskState_FAILED)
+		// Handle termination
+		if !opts.CompleteAll && failedCount > 0 {
+			// Fail everything on a first failed task.
+			task.SetState(pb.TaskState_FAILED)
+			return
 		}
-	}
-}
 
-func (nt *NestedTask) Proto(updater func(*pb.Task)) *pb.Task {
-	nt.pbMutex.Lock()
-	defer nt.pbMutex.Unlock()
-
-	if updater != nil {
-		updater(&nt.pb)
-	}
-
-	ret := proto.Clone(&nt.pb).(*pb.Task)
-
-	for _, child := range nt.children {
-		ret.Children = append(ret.Children, child.Proto(nil))
-	}
-	return ret
-}
-
-func (nt *NestedTask) SetState(state pb.TaskState) {
-	nt.Proto(func(pb *pb.Task) { pb.State = state })
-}
-
-func (nt *NestedTask) GetChild(name string) Task {
-
-	for _, child := range nt.children {
-		if child.Proto(nil).Name == name {
-			return child
+		if doneCount == len(task.children) {
+			if successCount == len(task.children) {
+				task.SetState(pb.TaskState_SUCCESS)
+			} else {
+				task.SetState(pb.TaskState_FAILED)
+			}
 		}
-	}
+	})
 
-	return nil
+	// end insert
 }

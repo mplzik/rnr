@@ -22,13 +22,13 @@ var (
 type Job struct {
 	pbMutex  sync.Mutex
 	job      pb.Job
-	root     Task
+	root     *Task
 	oldProto *pb.Task
 	err      error
 	done     chan struct{}
 }
 
-func NewJob(root Task) *Job {
+func NewJob(root *Task) *Job {
 	return &Job{
 		job: pb.Job{
 			Version: 1,
@@ -48,7 +48,8 @@ func (j *Job) Proto(updater func(*pb.Job)) *pb.Job {
 	}
 
 	ret := proto.Clone(&j.job).(*pb.Job)
-	ret.Root = j.root.Proto(nil)
+	tasksData := j.root.Proto(nil)
+	ret.Root = tasksData
 
 	return ret
 }
@@ -103,8 +104,8 @@ func taskDiff(path []string, old *pb.Task, new *pb.Task) []string {
 	sort.Strings(children)
 
 	for _, child := range children {
-		oldChild, _ := oldChildren[child]
-		newChild, _ := newChildren[child]
+		oldChild := oldChildren[child]
+		newChild := newChildren[child]
 		taskName := "(unknown)"
 		if newChild != nil {
 			taskName = newChild.Name
@@ -130,7 +131,7 @@ func (j *Job) Poll(ctx context.Context) {
 		log.Printf("State changed: %s\n", strings.Join(diff, "\n"))
 	}
 
-	j.oldProto = proto.Clone(newProto).(*pb.Task)
+	j.oldProto = newProto
 }
 
 func (j *Job) TaskRequest(r *pb.TaskRequest) error {

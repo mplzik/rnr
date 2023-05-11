@@ -10,13 +10,15 @@ import (
 
 func TestCallbackTask_Poll(t *testing.T) {
 	var callsCount int
-	fn := func(ctx context.Context, ct *CallbackTask) (bool, error) {
+	fn := func(ctx context.Context, task *pb.Task) *pb.Task {
 		callsCount++
 		if callsCount == 1 {
-			return false, nil
+			task.State = pb.TaskState_RUNNING
+			return task
 		}
 
-		return true, nil
+		task.State = pb.TaskState_SUCCESS
+		return task
 	}
 
 	ct := NewCallbackTask("callback test", fn)
@@ -58,14 +60,20 @@ func TestCallbackTask_Poll(t *testing.T) {
 		ct.Poll()
 
 		if callsCount != oldCount+1 {
-			t.Errorf("expecting callback to be invoked %d times, got %d invocations", oldCount, callsCount)
+			t.Errorf("expecting callback to be invoked %d times, got %d invocations", oldCount+1, callsCount)
 		}
 	}
 
 	t.Run("callback returns error", func(t *testing.T) {
 		var done bool
-		fn := func(ctx context.Context, ct *CallbackTask) (bool, error) {
-			return done, fmt.Errorf("done %t", done)
+		fn := func(ctx context.Context, task *pb.Task) *pb.Task {
+			if done {
+				task.State = pb.TaskState_FAILED
+			} else {
+				task.State = pb.TaskState_RUNNING
+			}
+			task.Message = fmt.Sprintf("done %t", done)
+			return task
 		}
 		ct := NewCallbackTask("failing callback test", fn)
 
@@ -89,7 +97,7 @@ func TestCallbackTask_Poll(t *testing.T) {
 			t.Errorf("task state should be %v, got %v", pb.TaskState_FAILED, s)
 		}
 		if exp := "done true"; pbt.Message != exp {
-			t.Errorf("expectiing message to be %q, got %q", exp, pbt.Message)
+			t.Errorf("expecting message to be %q, got %q", exp, pbt.Message)
 		}
 	})
 }

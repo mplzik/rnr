@@ -1,4 +1,4 @@
-package rnr_test
+package rnr
 
 import (
 	"context"
@@ -7,31 +7,14 @@ import (
 	"time"
 
 	"github.com/mplzik/rnr/golang/pkg/pb"
-	"github.com/mplzik/rnr/golang/pkg/rnr"
 )
-
-var _ rnr.Task = &task{}
-
-type task struct {
-	pollFn func()
-}
-
-func (t *task) Poll()                         { t.pollFn() }
-func (t *task) SetState(pb.TaskState)         {}
-func (t *task) Proto(func(*pb.Task)) *pb.Task { return nil }
-func (*task) GetChild(string) rnr.Task        { return nil }
 
 func TestJob(t *testing.T) {
 	var pollCount int
 
-	task := &task{
-		pollFn: func() {
-			pollCount++
-			t.Logf("poll %02d", pollCount)
-		},
-	}
+	mt := newMockTask("root", pb.TaskState_RUNNING, &pollCount)
 
-	j := rnr.NewJob(task)
+	j := NewJob(mt)
 
 	ctx := context.Background()
 
@@ -41,7 +24,7 @@ func TestJob(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	if err = j.Start(ctx, time.Millisecond); !errors.Is(err, rnr.ErrJobAlreadyStarted) {
+	if err = j.Start(ctx, time.Millisecond); !errors.Is(err, ErrJobAlreadyStarted) {
 		t.Fatalf("expecting ErrJobAlreadyStarted, got %v", err)
 	}
 
@@ -62,7 +45,7 @@ func TestJob(t *testing.T) {
 		t.Fatalf("unexpected error: %v", stopErr)
 	}
 
-	if err := j.Stop(); !errors.Is(err, rnr.ErrJobNotRunning) {
+	if err := j.Stop(); !errors.Is(err, ErrJobNotRunning) {
 		t.Fatalf("expecting rnr.ErrJobNotRunning, got %v", err)
 	}
 }
