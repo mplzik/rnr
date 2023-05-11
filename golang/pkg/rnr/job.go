@@ -131,7 +131,6 @@ func (j *Job) Poll(ctx context.Context) {
 		log.Printf("State changed: %s\n", strings.Join(diff, "\n"))
 	}
 
-	//j.oldProto = proto.Clone(newProto).(*pb.Task)
 	j.oldProto = newProto
 }
 
