@@ -1,6 +1,7 @@
 package rnr
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -74,11 +75,12 @@ func TestNestedTask_FailFirst(t *testing.T) {
 	nt.Add(ct2)
 	nt.SetState(pb.TaskState_RUNNING)
 
-	nt.Poll()
+	nt.Poll(context.TODO())
 	compareTaskStates(t, tasks, []pb.TaskState{pb.TaskState_FAILED, pb.TaskState_PENDING, pb.TaskState_FAILED})
 }
 
 func TestNestedTask_CompleteAllFail(t *testing.T) {
+	ctx := context.TODO()
 	nt := NewNestedTask("nested task test", NestedTaskOptions{Parallelism: 1, CompleteAll: true})
 	ct1 := newMockTask("child 1", pb.TaskState_FAILED, nil)
 	ct2 := newMockTask("child 2", pb.TaskState_SUCCESS, nil)
@@ -89,14 +91,15 @@ func TestNestedTask_CompleteAllFail(t *testing.T) {
 	nt.Add(ct2)
 	nt.SetState(pb.TaskState_RUNNING)
 
-	nt.Poll()
+	nt.Poll(ctx)
 	compareTaskStates(t, tasks, []pb.TaskState{pb.TaskState_FAILED, pb.TaskState_PENDING, pb.TaskState_RUNNING})
 
-	nt.Poll()
+	nt.Poll(ctx)
 	compareTaskStates(t, tasks, []pb.TaskState{pb.TaskState_FAILED, pb.TaskState_SUCCESS, pb.TaskState_FAILED})
 }
 
 func TestNestedTask_CompleteAllSuccess(t *testing.T) {
+	ctx := context.TODO()
 	ct1 := newMockTask("child 1", pb.TaskState_SUCCESS, nil)
 	ct2 := newMockTask("child 2", pb.TaskState_SUCCESS, nil)
 	nt := NewNestedTask("nested task test", NestedTaskOptions{Parallelism: 1, CompleteAll: true})
@@ -107,14 +110,15 @@ func TestNestedTask_CompleteAllSuccess(t *testing.T) {
 	nt.Add(ct2)
 	nt.SetState(pb.TaskState_RUNNING)
 
-	nt.Poll()
+	nt.Poll(ctx)
 	compareTaskStates(t, tasks, []pb.TaskState{pb.TaskState_SUCCESS, pb.TaskState_PENDING, pb.TaskState_RUNNING})
 
-	nt.Poll()
+	nt.Poll(ctx)
 	compareTaskStates(t, tasks, []pb.TaskState{pb.TaskState_SUCCESS, pb.TaskState_SUCCESS, pb.TaskState_SUCCESS})
 }
 
 func TestNestedTask_CallbackInvoked(t *testing.T) {
+	ctx := context.TODO()
 	childrenAdded := 0
 	nt := NewNestedTask("nested task test", NestedTaskOptions{
 		Parallelism: 1,
@@ -127,13 +131,13 @@ func TestNestedTask_CallbackInvoked(t *testing.T) {
 	})
 
 	nt.SetState(pb.TaskState_PENDING)
-	nt.Poll()
+	nt.Poll(ctx)
 	if childrenAdded != 0 {
 		t.Errorf("callback shouldn't be invoked for non-RUNNING nested task!")
 	}
 
 	nt.SetState(pb.TaskState_RUNNING)
-	nt.Poll()
+	nt.Poll(ctx)
 	if childrenAdded != 1 {
 		t.Errorf("nested task callback was not invoked for running task!")
 	}
@@ -142,7 +146,7 @@ func TestNestedTask_CallbackInvoked(t *testing.T) {
 	}
 
 	nt.SetState(pb.TaskState_RUNNING)
-	nt.Poll()
+	nt.Poll(ctx)
 	fmt.Println(nt.children[1].Proto(nil).Name)
 	if len(nt.children) != 2 {
 		t.Errorf("expected 2 children, got %d", len(nt.children))
@@ -150,6 +154,7 @@ func TestNestedTask_CallbackInvoked(t *testing.T) {
 }
 
 func TestNextedTask_PollAfterStateChange(t *testing.T) {
+	ctx := context.TODO()
 	pollCount := 0
 	ct := newMockTask("child 1", pb.TaskState_RUNNING, &pollCount) // This will stay in RUNNING state unless state is changed externally
 	nt := NewNestedTask("nested task test", NestedTaskOptions{Parallelism: 1, CompleteAll: true})
@@ -159,14 +164,14 @@ func TestNextedTask_PollAfterStateChange(t *testing.T) {
 
 	// Initially, a task in in PENDING state. Poll() from its parent should transfer it to RUNNING.
 	oldPollCount := pollCount
-	nt.Poll()
+	nt.Poll(ctx)
 	if oldPollCount+1 != pollCount {
 		t.Errorf("task was not polled when transitioning from PENDING to RUNNING state")
 	}
 
 	// A task in RUNNING state should get Poll()-ed each time.
 	oldPollCount = pollCount
-	nt.Poll()
+	nt.Poll(ctx)
 	if oldPollCount+1 != pollCount {
 		t.Errorf("task was not polled when in RUNNING state")
 	}
@@ -175,7 +180,7 @@ func TestNextedTask_PollAfterStateChange(t *testing.T) {
 	nt.SetState(pb.TaskState_RUNNING)
 	ct.SetState(pb.TaskState_SUCCESS)
 	oldPollCount = pollCount
-	nt.Poll()
+	nt.Poll(ctx)
 	if oldPollCount+1 != pollCount {
 		t.Errorf("task was not polled when transitioning from RUNNING to SUCCESS state")
 	}
@@ -184,7 +189,7 @@ func TestNextedTask_PollAfterStateChange(t *testing.T) {
 	nt.SetState(pb.TaskState_RUNNING)
 	ct.SetState(pb.TaskState_SKIPPED)
 	oldPollCount = pollCount
-	nt.Poll()
+	nt.Poll(ctx)
 	if oldPollCount+1 != pollCount {
 		t.Errorf("task was not polled when transitioning from SUCCESS to SKIPPED state")
 	}
