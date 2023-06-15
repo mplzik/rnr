@@ -63,7 +63,7 @@ func NewNestedTask(name string, opts NestedTaskOptions) *Task {
 
 		// Poll the child tasks
 		for _, child := range task.children {
-			child.Poll()
+			child.Poll(ctx)
 		}
 
 		successCount := 0

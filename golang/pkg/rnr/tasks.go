@@ -105,7 +105,7 @@ func (task *Task) GetChild(name string) *Task {
 }
 
 func (nt *Task) Add(task *Task) error {
-	if nt.has_children {
+	if !nt.has_children {
 		return ErrNoChildrenAllowed
 	}
 
